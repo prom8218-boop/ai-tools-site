@@ -1,0 +1,1139 @@
+import { useState, useEffect, useRef } from "react";
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const CONFIG = {
+  GEMINI_KEY: "AIzaSyDXEvIOwpum2qO_Y0dw9LbE3t5fA3VDejk",
+  APP_NAME: "AIFreedom.in",
+  FREE_DAILY: 15,
+  PRO_PRICE: 299,
+  AGENT_NAME: "Aitra",
+};
+
+// ============================================
+// 33 LANGUAGES
+// ============================================
+const LANGS = [
+  { code:"en", name:"English", native:"English", dir:"ltr", flag:"🇺🇸" },
+  { code:"hi", name:"Hindi", native:"हिन्दी", dir:"ltr", flag:"🇮🇳" },
+  { code:"bn", name:"Bengali", native:"বাংলা", dir:"ltr", flag:"🇧🇩" },
+  { code:"ta", name:"Tamil", native:"தமிழ்", dir:"ltr", flag:"🇮🇳" },
+  { code:"te", name:"Telugu", native:"తెలుగు", dir:"ltr", flag:"🇮🇳" },
+  { code:"mr", name:"Marathi", native:"मराठी", dir:"ltr", flag:"🇮🇳" },
+  { code:"gu", name:"Gujarati", native:"ગુજરાતી", dir:"ltr", flag:"🇮🇳" },
+  { code:"kn", name:"Kannada", native:"ಕನ್ನಡ", dir:"ltr", flag:"🇮🇳" },
+  { code:"ml", name:"Malayalam", native:"മലയാളം", dir:"ltr", flag:"🇮🇳" },
+  { code:"pa", name:"Punjabi", native:"ਪੰਜਾਬੀ", dir:"ltr", flag:"🇮🇳" },
+  { code:"or", name:"Odia", native:"ଓଡ଼ିଆ", dir:"ltr", flag:"🇮🇳" },
+  { code:"as", name:"Assamese", native:"অসমীয়া", dir:"ltr", flag:"🇮🇳" },
+  { code:"ur", name:"Urdu", native:"اردو", dir:"rtl", flag:"🇵🇰" },
+  { code:"sa", name:"Sanskrit", native:"संस्कृतम्", dir:"ltr", flag:"🕉️" },
+  { code:"ne", name:"Nepali", native:"नेपाली", dir:"ltr", flag:"🇳🇵" },
+  { code:"ks", name:"Kashmiri", native:"کٲشُر", dir:"rtl", flag:"🇮🇳" },
+  { code:"sd", name:"Sindhi", native:"سنڌي", dir:"rtl", flag:"🇵🇰" },
+  { code:"kok", name:"Konkani", native:"कोंकणी", dir:"ltr", flag:"🇮🇳" },
+  { code:"mai", name:"Maithili", native:"मैथिली", dir:"ltr", flag:"🇮🇳" },
+  { code:"mni", name:"Manipuri", native:"মৈতৈলোন্", dir:"ltr", flag:"🇮🇳" },
+  { code:"sat", name:"Santali", native:"ᱥᱟᱱᱛᱟᱲᱤ", dir:"ltr", flag:"🇮🇳" },
+  { code:"doi", name:"Dogri", native:"डोगरी", dir:"ltr", flag:"🇮🇳" },
+  { code:"brx", name:"Bodo", native:"बड़ो", dir:"ltr", flag:"🇮🇳" },
+  { code:"zh", name:"Chinese", native:"中文", dir:"ltr", flag:"🇨🇳" },
+  { code:"ja", name:"Japanese", native:"日本語", dir:"ltr", flag:"🇯🇵" },
+  { code:"ko", name:"Korean", native:"한국어", dir:"ltr", flag:"🇰🇷" },
+  { code:"ar", name:"Arabic", native:"العربية", dir:"rtl", flag:"🇸🇦" },
+  { code:"fr", name:"French", native:"Français", dir:"ltr", flag:"🇫🇷" },
+  { code:"de", name:"German", native:"Deutsch", dir:"ltr", flag:"🇩🇪" },
+  { code:"es", name:"Spanish", native:"Español", dir:"ltr", flag:"🇪🇸" },
+  { code:"ru", name:"Russian", native:"Русский", dir:"ltr", flag:"🇷🇺" },
+  { code:"pt", name:"Portuguese", native:"Português", dir:"ltr", flag:"🇧🇷" },
+];
+
+// ============================================
+// AI TOOLS
+// ============================================
+const TOOLS = [
+  { id:"chat", icon:"💬", color:"#FF6B2B", free:true, name:"AI Chat", desc:"Unlimited conversation with Gemini AI" },
+  { id:"text", icon:"✍️", color:"#E74C3C", free:true, name:"Text Writer", desc:"Blogs, articles, stories, essays" },
+  { id:"image", icon:"🎨", color:"#9B59B6", free:true, name:"Image Prompt", desc:"Midjourney, DALL-E, Stable Diffusion prompts" },
+  { id:"translate", icon:"🌐", color:"#F39C12", free:true, name:"AI Translator", desc:"33 languages with context awareness" },
+  { id:"code", icon:"💻", color:"#2980B9", free:true, name:"Code Generator", desc:"Write & debug in any programming language" },
+  { id:"seo", icon:"🔍", color:"#27AE60", free:false, name:"SEO Writer", desc:"Google-ranking articles with keywords" },
+  { id:"email", icon:"📧", color:"#E91E63", free:false, name:"Email Pro", desc:"Professional business emails" },
+  { id:"social", icon:"📱", color:"#1DA1F2", free:false, name:"Social Media", desc:"Instagram, Twitter, LinkedIn posts" },
+  { id:"ad", icon:"📢", color:"#FF5722", free:false, name:"Ad Copywriter", desc:"Facebook/Google ad copies that convert" },
+  { id:"resume", icon:"📄", color:"#607D8B", free:false, name:"Resume Builder", desc:"ATS-friendly professional resumes" },
+  { id:"yt", icon:"▶️", color:"#FF0000", free:false, name:"YouTube Tools", desc:"Titles, descriptions, tags, scripts" },
+  { id:"academic", icon:"🎓", color:"#3F51B5", free:false, name:"Academic AI", desc:"Research papers, summaries, citations" },
+];
+
+// ============================================
+// AI AGENT SYSTEM PROMPT
+// ============================================
+const AGENT_PROMPT = `You are ${CONFIG.AGENT_NAME}, a helpful AI assistant for ${CONFIG.APP_NAME}. 
+You help users with:
+- Using AI tools (text, image, code, translation, SEO, etc.)
+- Earning money through referrals (30% commission)
+- Upgrading to Pro plans
+- Technical support
+- Content creation tips
+
+Be friendly, use emojis, and speak in the user's language. Keep responses concise but helpful.`;
+
+// ============================================
+// GEMINI API CALLER
+// ============================================
+const callGemini = async (prompt, model = "gemini-1.5-flash") => {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${CONFIG.GEMINI_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.8, maxOutputTokens: 2048 }
+      }),
+    }
+  );
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+};
+
+// ============================================
+// PROMPT BUILDER
+// ============================================
+const buildPrompt = (toolId, input, langName) => {
+  const p = `Respond ONLY in ${langName}. Be helpful, detailed, and natural. `;
+  const prompts = {
+    chat: `${p}User asks: "${input}". Give a helpful, conversational response.`,
+    text: `${p}Write creative, engaging, well-structured content about: "${input}". Use headings, bullet points where appropriate.`,
+    image: `${p}Create 3 detailed AI image generation prompts for: "${input}". Include: style, lighting, camera angle, mood, color palette. Format as 1. 2. 3.`,
+    translate: `Translate the following text to ${langName}. Return ONLY the translation, no explanations:\n\n"${input}"`,
+    code: `Help with: "${input}". Provide clean, well-commented code. Explain the logic in ${langName}. Include example usage.`,
+    seo: `${p}Write SEO-optimized article about: "${input}". Include: catchy title, meta description (160 chars), H2 headings, bullet points, and strong CTA.`,
+    email: `${p}Write professional email for: "${input}". Include: subject line, greeting, body paragraphs, professional closing.`,
+    social: `${p}Create engaging social media content about: "${input}". Provide: Instagram caption, Twitter thread (5 tweets), LinkedIn post.`,
+    ad: `${p}Write high-converting ad copy for: "${input}". Include: headline (5 options), body text, CTA button text, target audience.`,
+    resume: `${p}Create professional resume content for: "${input}". Include: summary, skills section, experience bullets, ATS keywords.`,
+    yt: `${p}Create YouTube content for: "${input}". Include: 5 clickbait titles, SEO description, 15 tags, video script outline.`,
+    academic: `${p}Help with academic work: "${input}". Provide: structured summary, key points, citation suggestions, further reading.`,
+  };
+  return prompts[toolId] || `${p}${input}`;
+};
+
+// ============================================
+// MAIN APP COMPONENT
+// ============================================
+export default function App() {
+  const [lang, setLang] = useState("en");
+  const [showPicker, setShowPicker] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState("home");
+  const [activeTool, setTool] = useState(null);
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [usage, setUsage] = useState(0);
+  const [isPro, setPro] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [user, setUser] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPass, setLoginPass] = useState("");
+  const [chatHistory, setChatHistory] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [earnings, setEarnings] = useState({ referrals: 0, commission: 0, total: 0 });
+  
+  // AI AGENT STATE
+  const [agentOpen, setAgentOpen] = useState(false);
+  const [agentMessages, setAgentMessages] = useState([
+    { role: "agent", text: "👋 Hi! I'm Aitra, your AI assistant. I can help you use tools, earn money, or answer any questions!" }
+  ]);
+  const [agentInput, setAgentInput] = useState("");
+  const [agentLoading, setAgentLoading] = useState(false);
+  
+  const outputRef = useRef(null);
+  const agentScrollRef = useRef(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ai_user");
+    if (saved) {
+      const u = JSON.parse(saved);
+      setUser(u);
+      setPro(u.isPro || false);
+    }
+    setUsage(parseInt(localStorage.getItem("ai_usage") || "0"));
+    setLang(localStorage.getItem("ai_lang") || "en");
+    setChatHistory(JSON.parse(localStorage.getItem("ai_chat") || "[]"));
+    setEarnings(JSON.parse(localStorage.getItem("ai_earn") || '{"referrals":0,"commission":0,"total":0}'));
+    
+    // Load agent history
+    const agentHist = localStorage.getItem("agent_chat");
+    if (agentHist) setAgentMessages(JSON.parse(agentHist));
+  }, []);
+
+  // Auto-scroll agent chat
+  useEffect(() => {
+    if (agentScrollRef.current) {
+      agentScrollRef.current.scrollTop = agentScrollRef.current.scrollHeight;
+    }
+  }, [agentMessages]);
+
+  const curLang = LANGS.find(l => l.code === lang) || LANGS[0];
+  const dir = curLang.dir;
+
+  const changeLang = (code) => {
+    setLang(code);
+    localStorage.setItem("ai_lang", code);
+    setShowPicker(false);
+    setSearch("");
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const mockUser = { email: loginEmail, name: loginEmail.split("@")[0], isPro: false, joined: new Date().toISOString() };
+    setUser(mockUser);
+    localStorage.setItem("ai_user", JSON.stringify(mockUser));
+    setShowLogin(false);
+    setLoginEmail("");
+    setLoginPass("");
+  };
+
+  const logout = () => {
+    setUser(null);
+    setPro(false);
+    localStorage.removeItem("ai_user");
+    setPage("home");
+  };
+
+  const upgradeToPro = () => {
+    const updated = { ...user, isPro: true };
+    setUser(updated);
+    setPro(true);
+    localStorage.setItem("ai_user", JSON.stringify(updated));
+    alert("🎉 Pro Activated! (Demo mode - integrate real payment)");
+    setPage("home");
+  };
+
+  const run = async () => {
+    if (!input.trim()) return;
+    const tool = TOOLS.find(t => t.id === activeTool);
+    if (!tool.free && !isPro) { 
+      setOutput("🔒 This is a Pro feature. Upgrade to unlock!"); 
+      return; 
+    }
+    if (!isPro && usage >= CONFIG.FREE_DAILY) { 
+      setOutput(`🔒 Free limit reached (${CONFIG.FREE_DAILY}/day). Upgrade to Pro for unlimited access!`); 
+      return; 
+    }
+    
+    setLoading(true); 
+    setOutput("");
+    
+    try {
+      const text = await callGemini(buildPrompt(activeTool, input, curLang.name));
+      setOutput(text);
+      const n = usage + 1;
+      setUsage(n);
+      localStorage.setItem("ai_usage", n);
+      
+      const entry = { tool: activeTool, input, output: text, time: Date.now(), lang };
+      const newHistory = [entry, ...chatHistory].slice(0, 50);
+      setChatHistory(newHistory);
+      localStorage.setItem("ai_chat", JSON.stringify(newHistory));
+    } catch(e) { 
+      setOutput("❌ Error: " + e.message); 
+    } finally { 
+      setLoading(false); 
+    }
+  };
+
+  // AI AGENT FUNCTION
+  const sendAgentMessage = async () => {
+    if (!agentInput.trim()) return;
+    
+    const userMsg = { role: "user", text: agentInput };
+    const newMessages = [...agentMessages, userMsg];
+    setAgentMessages(newMessages);
+    setAgentInput("");
+    setAgentLoading(true);
+    
+    try {
+      const context = `User language: ${curLang.name}. User status: ${isPro ? "Pro" : "Free"}. Usage: ${usage}/${CONFIG.FREE_DAILY}. Earnings: ₹${earnings.total}.`;
+      const prompt = `${AGENT_PROMPT}\n\n${context}\n\nUser: ${userMsg.text}\n\nAitra:`;
+      
+      const response = await callGemini(prompt);
+      const agentResponse = { role: "agent", text: response };
+      const finalMessages = [...newMessages, agentResponse];
+      setAgentMessages(finalMessages);
+      localStorage.setItem("agent_chat", JSON.stringify(finalMessages));
+    } catch(e) {
+      const errorMsg = { role: "agent", text: "❌ Sorry, I'm having trouble connecting. Please try again!" };
+      setAgentMessages([...newMessages, errorMsg]);
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
+  const copyOutput = () => {
+    navigator.clipboard.writeText(output);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const downloadOutput = () => {
+    const blob = new Blob([output], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ai-output-${Date.now()}.txt`;
+    a.click();
+  };
+
+  const shareOutput = () => {
+    if (navigator.share) {
+      navigator.share({ title: "AI Output", text: output });
+    } else {
+      copyOutput();
+      alert("Copied to clipboard! Paste anywhere to share.");
+    }
+  };
+
+  const filteredLangs = LANGS.filter(l =>
+    l.name.toLowerCase().includes(search.toLowerCase()) || 
+    l.native.includes(search) ||
+    l.code.includes(search.toLowerCase())
+  );
+
+  const css = `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #050508; color: #F0F0F0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(0.8);opacity:0.5} 40%{transform:scale(1.2);opacity:1} }
+    @keyframes glow { 0%,100%{box-shadow:0 0 20px rgba(255,107,43,0.3)} 50%{box-shadow:0 0 40px rgba(255,107,43,0.6)} }
+    @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .tc:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .tc { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .lb:hover { background: rgba(255,107,43,0.15) !important; border-color: #FF6B2B !important; }
+    .lb { transition: all 0.2s; }
+    textarea, input { outline: none; font-family: inherit; }
+    button { cursor: pointer; font-family: inherit; }
+    .pro-glow { animation: glow 2s ease-in-out infinite; }
+    .animate-in { animation: slideIn 0.5s ease-out; }
+    .agent-float { animation: float 3s ease-in-out infinite; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,107,43,0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,107,43,0.5); }
+  `;
+
+  // ============================================
+  // COMPONENTS
+  // ============================================
+
+  const Picker = () => (
+    <div onClick={() => setShowPicker(false)} style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)",
+      zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", padding: 16
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "linear-gradient(145deg, #13131A, #1a1a2e)", borderRadius: 24,
+        border: "1px solid rgba(255,107,43,0.2)", width: "100%", maxWidth: 600,
+        maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column",
+        boxShadow: "0 25px 50px rgba(0,0,0,0.5)"
+      }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontWeight: 900, fontSize: 18, display: "flex", alignItems: "center", gap: 8 }}>
+            <span>🌍</span> Choose Language
+          </div>
+          <button onClick={() => setShowPicker(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            ✕
+          </button>
+        </div>
+        <div style={{ padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder="Search 33 languages..."
+            style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px 14px", color: "#fff", fontSize: 14 }}
+          />
+        </div>
+        <div style={{ overflowY: "auto", padding: 16, flex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>
+            {filteredLangs.map(l => (
+              <button key={l.code} onClick={() => changeLang(l.code)}
+                style={{
+                  background: lang === l.code ? "rgba(255,107,43,0.15)" : "rgba(255,255,255,0.03)",
+                  border: `1.5px solid ${lang === l.code ? "#FF6B2B" : "rgba(255,255,255,0.08)"}`,
+                  borderRadius: 12, padding: "12px 14px", textAlign: "left", display: "flex", alignItems: "center", gap: 10
+                }}>
+                <span style={{ fontSize: 20 }}>{l.flag}</span>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: lang === l.code ? "#FF6B2B" : "#fff" }}>{l.native}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{l.name}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const LoginModal = () => (
+    <div onClick={() => setShowLogin(false)} style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(10px)",
+      zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: "linear-gradient(145deg, #13131A, #1a1a2e)", borderRadius: 24,
+        border: "1px solid rgba(255,107,43,0.2)", width: "100%", maxWidth: 420,
+        padding: "32px 28px", boxShadow: "0 25px 50px rgba(0,0,0,0.5)"
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🔐</div>
+          <h2 style={{ fontSize: 24, fontWeight: 900, marginBottom: 6 }}>Welcome Back</h2>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Login to save your work & earn</p>
+        </div>
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "rgba(255,255,255,0.6)" }}>Email</label>
+            <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required placeholder="your@email.com"
+              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 14px", color: "#fff", fontSize: 14 }} />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6, color: "rgba(255,255,255,0.6)" }}>Password</label>
+            <input type="password" value={loginPass} onChange={e => setLoginPass(e.target.value)} required placeholder="••••••••"
+              style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "11px 14px", color: "#fff", fontSize: 14 }} />
+          </div>
+          <button type="submit" style={{
+            width: "100%", padding: 13, borderRadius: 11, border: "none",
+            background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff",
+            fontSize: 15, fontWeight: 700, marginBottom: 16
+          }}>
+            Login / Sign Up
+          </button>
+          <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+            No account? Just enter email — we'll create one!
+          </p>
+        </form>
+      </div>
+    </div>
+  );
+
+  const EarningsPanel = () => (
+    <div style={{
+      position: "fixed", right: sidebarOpen ? 0 : -320, top: 0, bottom: 0, width: 320,
+      background: "linear-gradient(180deg, #13131A, #0d0d1a)", borderLeft: "1px solid rgba(255,107,43,0.15)",
+      zIndex: 200, transition: "right 0.3s ease", padding: "20px", overflowY: "auto"
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 800 }}>💰 Your Earnings</h3>
+        <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 20 }}>✕</button>
+      </div>
+      
+      <div style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", borderRadius: 16, padding: 20, marginBottom: 20, textAlign: "center" }}>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>Total Earnings</div>
+        <div style={{ fontSize: 36, fontWeight: 900, color: "#FF9500" }}>₹{earnings.total}</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>Lifetime commission</div>
+      </div>
+
+      <div style={{ display: "grid", gap: 12, marginBottom: 24 }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 14, display: "flex", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Referrals</span>
+          <span style={{ fontWeight: 700, color: "#27AE60" }}>{earnings.referrals}</span>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: 14, display: "flex", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Commission Rate</span>
+          <span style={{ fontWeight: 700, color: "#F39C12" }}>30%</span>
+        </div>
+      </div>
+
+      <div style={{ background: "rgba(155,89,182,0.08)", border: "1px solid rgba(155,89,182,0.2)", borderRadius: 14, padding: 16, marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10, color: "#9B59B6" }}>🔗 Your Referral Link</div>
+        <div style={{ background: "rgba(0,0,0,0.3)", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "rgba(255,255,255,0.5)", wordBreak: "break-all", marginBottom: 10 }}>
+          {user ? `https://aifreedom.in/ref/${btoa(user.email).slice(0, 12)}` : "Login to get your link"}
+        </div>
+        <button onClick={copyOutput} style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid rgba(155,89,182,0.3)", background: "rgba(155,89,182,0.1)", color: "#9B59B6", fontSize: 12, fontWeight: 600 }}>
+          📋 Copy Link
+        </button>
+      </div>
+
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.6 }}>
+        <strong style={{ color: "#FF9500" }}>How to earn:</strong><br/>
+        1. Share your referral link<br/>
+        2. Friends sign up & upgrade<br/>
+        3. You earn 30% commission<br/>
+        4. Withdraw via UPI/PayPal<br/><br/>
+        <strong style={{ color: "#27AE60" }}>Pro tip:</strong> Share on WhatsApp groups, Telegram, YouTube, and Instagram for maximum reach!
+      </div>
+    </div>
+  );
+
+  // AI AGENT CHAT COMPONENT
+  const AgentChat = () => (
+    <div style={{
+      position: "fixed", bottom: 20, right: 20, zIndex: 500,
+      display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10
+    }}>
+      {/* Chat Window */}
+      {agentOpen && (
+        <div style={{
+          width: 340, maxWidth: "calc(100vw - 40px)", height: 480,
+          background: "linear-gradient(145deg, #13131A, #1a1a2e)",
+          border: "1px solid rgba(255,107,43,0.2)", borderRadius: 20,
+          boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+          display: "flex", flexDirection: "column", overflow: "hidden"
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "14px 18px", background: "linear-gradient(135deg, #FF6B2B, #FF9500)",
+            display: "flex", alignItems: "center", gap: 10
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18
+            }}>
+              🤖
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: "#fff" }}>{CONFIG.AGENT_NAME}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>AI Assistant • Online</div>
+            </div>
+            <button onClick={() => setAgentOpen(false)} style={{
+              marginLeft: "auto", background: "none", border: "none", color: "#fff", fontSize: 18
+            }}>
+              ✕
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div ref={agentScrollRef} style={{
+            flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 12
+          }}>
+            {agentMessages.map((msg, i) => (
+              <div key={i} style={{
+                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                maxWidth: "85%", padding: "10px 14px", borderRadius: 14,
+                background: msg.role === "user" ? "rgba(255,107,43,0.15)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${msg.role === "user" ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.08)"}`,
+                fontSize: 13, lineHeight: 1.6, color: "rgba(255,255,255,0.9)"
+              }}>
+                {msg.text}
+              </div>
+            ))}
+            {agentLoading && (
+              <div style={{ display: "flex", gap: 6, padding: "8px 14px" }}>
+                {[0,1,2].map(i => (
+                  <div key={i} style={{
+                    width: 7, height: 7, borderRadius: "50%", background: "#FF9500",
+                    animation: `bounce 1s ease-in-out ${i*0.15}s infinite`
+                  }} />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          <div style={{ padding: "10px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 8 }}>
+            <input
+              value={agentInput}
+              onChange={e => setAgentInput(e.target.value)}
+              onKeyPress={e => e.key === "Enter" && sendAgentMessage()}
+              placeholder="Ask me anything..."
+              style={{
+                flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 10, padding: "8px 12px", color: "#fff", fontSize: 13
+              }}
+            />
+            <button onClick={sendAgentMessage} disabled={agentLoading || !agentInput.trim()} style={{
+              padding: "8px 14px", borderRadius: 10, border: "none",
+              background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff",
+              fontSize: 13, fontWeight: 700, opacity: agentLoading || !agentInput.trim() ? 0.5 : 1
+            }}>
+              ➤
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Button */}
+      {!agentOpen && (
+        <button onClick={() => setAgentOpen(true)} className="agent-float" style={{
+          width: 56, height: 56, borderRadius: "50%",
+          background: "linear-gradient(135deg, #FF6B2B, #FF9500)",
+          border: "none", color: "#fff", fontSize: 24,
+          boxShadow: "0 8px 25px rgba(255,107,43,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center"
+        }}>
+          🤖
+        </button>
+      )}
+    </div>
+  );
+
+  const Nav = () => (
+    <nav style={{
+      display: "flex", justifyContent: "space-between", alignItems: "center",
+      padding: "14px 20px", background: "rgba(5,5,8,0.95)", backdropFilter: "blur(12px)",
+      borderBottom: "1px solid rgba(255,107,43,0.08)", position: "sticky", top: 0, zIndex: 100
+    }}>
+      <span onClick={() => setPage("home")} style={{
+        fontWeight: 900, fontSize: 20, cursor: "pointer",
+        background: "linear-gradient(135deg, #FF6B2B, #FF9500, #FFD700)",
+        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+        display: "flex", alignItems: "center", gap: 8
+      }}>
+        <span style={{ fontSize: 24 }}>⚡</span> {CONFIG.APP_NAME}
+      </span>
+      
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        {user && (
+          <button onClick={() => { setSidebarOpen(true); }} style={{
+            padding: "6px 12px", borderRadius: 20, border: "1px solid rgba(39,174,96,0.3)",
+            background: "rgba(39,174,96,0.08)", color: "#27AE60", fontSize: 12, fontWeight: 700
+          }}>
+            💰 ₹{earnings.total}
+          </button>
+        )}
+        
+        <button onClick={() => setShowPicker(true)} style={{
+          padding: "7px 14px", borderRadius: 20, border: "1px solid rgba(255,165,0,0.3)",
+          background: "rgba(255,165,0,0.07)", color: "#FF9500", fontSize: 13, fontWeight: 700,
+          display: "flex", alignItems: "center", gap: 6
+        }}>
+          <span>{curLang.flag}</span> {curLang.native} ▼
+        </button>
+
+        {user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {isPro && (
+              <span className="pro-glow" style={{
+                padding: "6px 14px", borderRadius: 20, border: "1px solid #FFD700",
+                color: "#FFD700", fontSize: 12, fontWeight: 800, background: "rgba(255,215,0,0.1)"
+              }}>
+                ✨ PRO
+              </span>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }} onClick={() => setShowLogin(true)}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                background: "linear-gradient(135deg, #FF6B2B, #FF9500)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 14, fontWeight: 800
+              }}>
+                {user.name?.[0]?.toUpperCase()}
+              </div>
+            </div>
+            <button onClick={logout} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+              Exit
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setShowLogin(true)} style={{
+            padding: "8px 18px", borderRadius: 20, border: "none",
+            background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff",
+            fontSize: 13, fontWeight: 700
+          }}>
+            Login
+          </button>
+        )}
+      </div>
+    </nav>
+  );
+
+  // ============================================
+  // PAGES
+  // ============================================
+
+  if (page === "tool" && activeTool) {
+    const tool = TOOLS.find(t => t.id === activeTool);
+    const isLocked = !tool.free && !isPro;
+    
+    return (
+      <div style={{ background: "#050508", minHeight: "100vh", color: "#F0F0F0", direction: dir }}>
+        <style>{css}</style>
+        {showPicker && <Picker />}
+        {showLogin && <LoginModal />}
+        <Nav />
+        <AgentChat />
+        
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "24px 16px 60px" }}>
+          <button onClick={() => setPage("home")} style={{
+            background: "none", border: "none", color: "rgba(255,255,255,0.45)",
+            fontSize: 14, marginBottom: 20, display: "flex", alignItems: "center", gap: 6
+          }}>
+            ← All Tools
+          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: 16,
+              background: `${tool.color}15`, border: `2px solid ${tool.color}30`,
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28
+            }}>
+              {tool.icon}
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 800 }}>{tool.name}</h1>
+                {!tool.free && <span style={{
+                  fontSize: 10, background: `${tool.color}20`, color: tool.color,
+                  padding: "3px 10px", borderRadius: 8, fontWeight: 800, border: `1px solid ${tool.color}40`
+                }}>PRO</span>}
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, marginTop: 4 }}>{tool.desc}</p>
+            </div>
+          </div>
+
+          {isLocked ? (
+            <div className="animate-in" style={{
+              background: "linear-gradient(145deg, rgba(155,89,182,0.08), rgba(155,89,182,0.03))",
+              border: "1.5px solid rgba(155,89,182,0.25)", borderRadius: 20,
+              padding: "48px 32px", textAlign: "center"
+            }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 10 }}>Pro Feature</h3>
+              <p style={{ color: "rgba(255,255,255,0.45)", maxWidth: 360, margin: "0 auto 24px", lineHeight: 1.6 }}>
+                This tool is available exclusively for Pro members. Unlock unlimited access to all 12 AI tools.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 300, margin: "0 auto 20px" }}>
+                {["All 12 AI Tools unlocked", "Unlimited daily requests", "Download & share outputs", "Priority support"].map((f, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ color: "#27AE60" }}>✓</span> {f}
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setPage("pricing")} style={{
+                padding: "14px 36px", borderRadius: 12, border: "none",
+                background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff",
+                fontSize: 15, fontWeight: 700, boxShadow: "0 8px 25px rgba(255,107,43,0.3)"
+              }}>
+                Upgrade to Pro — ₹{CONFIG.PRO_PRICE}/month
+              </button>
+            </div>
+          ) : (
+            <div className="animate-in">
+              <textarea 
+                value={input} 
+                onChange={e => setInput(e.target.value)} 
+                dir={dir}
+                placeholder={`Enter your prompt here... (in ${curLang.name})`}
+                style={{
+                  width: "100%", minHeight: 120, background: "rgba(255,255,255,0.03)",
+                  border: "1.5px solid rgba(255,255,255,0.1)", borderRadius: 14,
+                  padding: 16, color: "#fff", fontSize: 15, resize: "vertical",
+                  textAlign: dir === "rtl" ? "right" : "left", lineHeight: 1.6
+                }}
+              />
+              
+              <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+                <button onClick={run} disabled={loading || !input.trim()} style={{
+                  flex: 1, minWidth: 140, padding: 14, borderRadius: 12, border: "none",
+                  background: `linear-gradient(135deg, ${tool.color}, ${tool.color}CC)`, color: "#fff",
+                  fontSize: 15, fontWeight: 700, opacity: loading || !input.trim() ? 0.5 : 1,
+                  boxShadow: `0 6px 20px ${tool.color}30`
+                }}>
+                  {loading ? "Generating..." : `${tool.icon} Generate`}
+                </button>
+                
+                {output && (
+                  <>
+                    <button onClick={copyOutput} style={{
+                      padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)", color: copied ? "#27AE60" : "#fff",
+                      fontSize: 13, fontWeight: 600
+                    }}>
+                      {copied ? "✓ Copied!" : "📋 Copy"}
+                    </button>
+                    <button onClick={downloadOutput} style={{
+                      padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)", color: "#fff",
+                      fontSize: 13, fontWeight: 600
+                    }}>
+                      ⬇️ Download
+                    </button>
+                    <button onClick={shareOutput} style={{
+                      padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.05)", color: "#fff",
+                      fontSize: 13, fontWeight: 600
+                    }}>
+                      🔗 Share
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {loading && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "center", padding: "40px 0" }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{
+                      width: 10, height: 10, borderRadius: "50%", background: tool.color,
+                      animation: `bounce 1.2s ease-in-out ${i * 0.15}s infinite`
+                    }} />
+                  ))}
+                </div>
+              )}
+
+              {output && (
+                <div style={{
+                  marginTop: 24, background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14,
+                  padding: 20, position: "relative"
+                }}>
+                  <div style={{ position: "absolute", top: 12, right: 12, display: "flex", gap: 6 }}>
+                    <span style={{
+                      fontSize: 11, background: "rgba(255,107,43,0.15)", color: "#FF9500",
+                      padding: "4px 10px", borderRadius: 6, fontWeight: 700
+                    }}>
+                      {curLang.native}
+                    </span>
+                  </div>
+                  <div ref={outputRef} style={{
+                    whiteSpace: "pre-wrap", lineHeight: 1.8, fontSize: 14.5,
+                    color: "rgba(255,255,255,0.9)", direction: dir,
+                    textAlign: dir === "rtl" ? "right" : "left", paddingTop: 8
+                  }}>
+                    {output}
+                  </div>
+                </div>
+              )}
+
+              <div style={{
+                marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.25)",
+                textAlign: "right", display: "flex", justifyContent: "space-between", alignItems: "center"
+              }}>
+                <span>{isPro ? "✨ Unlimited Pro Plan" : `Free: ${usage}/${CONFIG.FREE_DAILY} today`}</span>
+                {!isPro && usage >= CONFIG.FREE_DAILY - 3 && (
+                  <button onClick={() => setPage("pricing")} style={{
+                    background: "none", border: "none", color: "#FF6B2B", fontSize: 12, fontWeight: 700, cursor: "pointer"
+                  }}>
+                    Upgrade →
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (page === "pricing") {
+    return (
+      <div style={{ background: "#050508", minHeight: "100vh", color: "#F0F0F0" }}>
+        <style>{css}</style>
+        {showPicker && <Picker />}
+        {showLogin && <LoginModal />}
+        <Nav />
+        <AgentChat />
+        
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "50px 16px" }}>
+          <div style={{ textAlign: "center", marginBottom: 50 }}>
+            <h1 style={{
+              fontSize: "clamp(28px, 6vw, 48px)", fontWeight: 900, marginBottom: 12,
+              background: "linear-gradient(135deg, #fff, #FF9500)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+            }}>
+              Choose Your Plan
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 16, maxWidth: 500, margin: "0 auto" }}>
+              Start free, upgrade when you're ready. Cancel anytime.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20, maxWidth: 800, margin: "0 auto" }}>
+            {[
+              { name: "Free", price: "₹0", period: "Forever", tools: 5, daily: CONFIG.FREE_DAILY, color: "#6C757D", features: ["5 AI Tools", `${CONFIG.FREE_DAILY} requests/day`, "33 Languages", "Basic support"] },
+              { name: "Pro", price: `₹${CONFIG.PRO_PRICE}`, period: "/month", tools: 12, daily: "Unlimited", color: "#FF6B2B", hot: true, features: ["All 12 AI Tools", "Unlimited requests", "33 Languages", "Download outputs", "Priority support", "Earn 30% referral commission"] },
+            ].map(plan => (
+              <div key={plan.name} className="animate-in" style={{
+                background: plan.hot ? `linear-gradient(145deg, ${plan.color}10, transparent)` : "rgba(255,255,255,0.02)",
+                border: `2px solid ${plan.hot ? plan.color : "rgba(255,255,255,0.08)"}`,
+                borderRadius: 24, padding: "32px 24px", position: "relative",
+                transform: plan.hot ? "scale(1.03)" : "scale(1)",
+                boxShadow: plan.hot ? `0 20px 40px ${plan.color}15` : "none"
+              }}>
+                {plan.hot && (
+                  <div style={{
+                    position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)",
+                    background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff",
+                    padding: "5px 18px", borderRadius: 20, fontSize: 12, fontWeight: 800,
+                    boxShadow: "0 4px 15px rgba(255,107,43,0.3)"
+                  }}>
+                    🔥 MOST POPULAR
+                  </div>
+                )}
+                
+                <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>{plan.name}</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+                  <span style={{ fontSize: 40, fontWeight: 900, color: plan.color, lineHeight: 1 }}>{plan.price}</span>
+                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>{plan.period}</span>
+                </div>
+                
+                <div style={{ margin: "20px 0", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {plan.features.map((f, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "rgba(255,255,255,0.65)" }}>
+                      <span style={{ color: "#27AE60", fontSize: 14 }}>✓</span> {f}
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={() => {
+                  if (plan.name === "Pro") {
+                    if (!user) { setShowLogin(true); return; }
+                    upgradeToPro();
+                  } else {
+                    setPage("home");
+                  }
+                }} style={{
+                  width: "100%", padding: 14, borderRadius: 12,
+                  border: plan.hot ? "none" : `1.5px solid ${plan.color}`,
+                  background: plan.hot ? `linear-gradient(135deg, ${plan.color}, #FF9500)` : `${plan.color}15`,
+                  color: plan.hot ? "#fff" : plan.color,
+                  fontSize: 15, fontWeight: 700,
+                  boxShadow: plan.hot ? `0 8px 25px ${plan.color}30` : "none"
+                }}>
+                  {plan.name === "Free" ? "Start Free" : "Get Pro Now"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: 40 }}>
+            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, marginBottom: 8 }}>
+              💳 Secure Payment via UPI · PhonePe · Paytm · Razorpay · Cards
+            </p>
+            <p style={{ color: "rgba(255,255,255,0.15)", fontSize: 11 }}>
+              7-day money-back guarantee · Cancel anytime · Instant activation
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================
+  // HOME PAGE
+  // ============================================
+  return (
+    <div style={{ background: "#050508", minHeight: "100vh", color: "#F0F0F0", direction: dir, overflowX: "hidden" }}>
+      <style>{css}</style>
+      {showPicker && <Picker />}
+      {showLogin && <LoginModal />}
+      {sidebarOpen && <EarningsPanel />}
+      <AgentChat />
+      <div style={{ marginRight: sidebarOpen ? 320 : 0, transition: "margin 0.3s" }}>
+        <Nav />
+
+        {/* HERO */}
+        <div style={{ textAlign: "center", padding: "70px 16px 50px", position: "relative" }}>
+          <div style={{
+            position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)",
+            width: 600, height: 600,
+            background: "radial-gradient(circle, rgba(255,107,43,0.08) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }} />
+          
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)",
+            borderRadius: 20, padding: "6px 18px", fontSize: 13, color: "#FF9500",
+            marginBottom: 24, fontWeight: 700
+          }}>
+            <span style={{ animation: "pulse 2s infinite" }}>●</span> World's Most Free AI Platform
+          </div>
+          
+          <h1 style={{
+            fontSize: "clamp(36px, 8vw, 72px)", fontWeight: 900, lineHeight: 1.05,
+            marginBottom: 20, letterSpacing: "-0.02em",
+            background: "linear-gradient(135deg, #fff 0%, #FF9500 40%, #FF6B2B 80%)",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+          }}>
+            AI Freedom<br/>For Everyone
+          </h1>
+          
+          <p style={{
+            fontSize: 16, color: "rgba(255,255,255,0.45)", maxWidth: 540,
+            margin: "0 auto 30px", lineHeight: 1.7
+          }}>
+            12 powerful AI tools. 33 languages. Write, code, create, translate — 
+            and <strong style={{ color: "#FF9500" }}>earn money</strong> by sharing with friends.
+          </p>
+
+          {/* LANGUAGE STRIP */}
+          <div style={{
+            display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center",
+            maxWidth: 700, margin: "0 auto 32px"
+          }}>
+            {LANGS.slice(0, 10).map(l => (
+              <button key={l.code} className="lb" onClick={() => changeLang(l.code)}
+                style={{
+                  padding: "7px 14px", borderRadius: 20, fontSize: 13, fontWeight: 700,
+                  background: lang === l.code ? "rgba(255,107,43,0.15)" : "rgba(255,255,255,0.03)",
+                  border: `1.5px solid ${lang === l.code ? "#FF6B2B" : "rgba(255,255,255,0.08)"}`,
+                  color: lang === l.code ? "#FF6B2B" : "rgba(255,255,255,0.55)"
+                }}>
+                <span style={{ marginRight: 4 }}>{l.flag}</span>{l.native}
+              </button>
+            ))}
+            <button onClick={() => setShowPicker(true)} style={{
+              padding: "7px 14px", borderRadius: 20, fontSize: 13,
+              background: "rgba(255,255,255,0.03)", border: "1.5px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.35)"
+            }}>
+              +{LANGS.length - 10} more →
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+            <button onClick={() => { setTool("chat"); setPage("tool"); setInput(""); setOutput(""); }}
+              className="pro-glow"
+              style={{
+                padding: "14px 36px", borderRadius: 14, border: "none",
+                background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff",
+                fontSize: 16, fontWeight: 700,
+                boxShadow: "0 10px 30px rgba(255,107,43,0.35)"
+              }}>
+              Start Creating Free ✨
+            </button>
+            <button onClick={() => setPage("pricing")}
+              style={{
+                padding: "14px 36px", borderRadius: 14,
+                border: "1.5px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.03)",
+                color: "#fff", fontSize: 16, fontWeight: 600
+              }}>
+              View Plans →
+            </button>
+          </div>
+        </div>
+
+        {/* STATS */}
+        <div style={{
+          display: "flex", justifyContent: "center", gap: 40,
+          padding: "24px 16px", borderTop: "1px solid rgba(255,255,255,0.05)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)", flexWrap: "wrap"
+        }}>
+          {[
+            ["33", "Languages"],
+            ["12", "AI Tools"],
+            ["100K+", "Users"],
+            ["₹0", "To Start"]
+          ].map(([n, l]) => (
+            <div key={l} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "#FF9500", lineHeight: 1 }}>{n}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4, fontWeight: 500 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* TOOLS GRID */}
+        <div style={{ maxWidth: 1000, margin: "0 auto", padding: "60px 16px" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 10 }}>⚡ All AI Tools</h2>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15 }}>
+              Free tools marked — upgrade for the full power
+            </p>
+          </div>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 18 }}>
+            {TOOLS.map(t => (
+              <div key={t.id} className="tc" onClick={() => {
+                setTool(t.id); setPage("tool"); setInput(""); setOutput("");
+              }} style={{
+                background: "rgba(255,255,255,0.02)", border: `1.5px solid ${t.color}20`,
+                borderRadius: 18, padding: 24, cursor: "pointer", position: "relative", overflow: "hidden"
+              }}>
+                <div style={{
+                  position: "absolute", top: 0, right: 0, width: 80, height: 80,
+                  background: `${t.color}06`, borderRadius: "0 0 0 80px"
+                }} />
+                
+                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12, position: "relative" }}>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 12,
+                    background: `${t.color}12`, border: `1.5px solid ${t.color}25`,
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24
+                  }}>
+                    {t.icon}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
+                      {t.name}
+                      {!t.free && <span style={{
+                        fontSize: 9, background: `${t.color}18`, color: t.color,
+                        padding: "2px 8px", borderRadius: 6, fontWeight: 800, border: `1px solid ${t.color}30`
+                      }}>PRO</span>}
+                    </div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                      {t.free ? "✓ Free" : "🔒 Pro only"}
+                    </div>
+                  </div>
+                </div>
+                
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.6, position: "relative" }}>
+                  {t.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* EARN MONEY */}
+        <div style={{
+          background: "linear-gradient(145deg, rgba(255,107,43,0.05), rgba(155,89,182,0.05))",
+          borderTop: "1px solid rgba(255,107,43,0.1)", borderBottom: "1px solid rgba(255,107,43,0.1)",
+          padding: "60px 16px"
+        }}>
+          <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>💰</div>
+            <h2 style={{ fontSize: 32, fontWeight: 900, marginBottom: 14 }}>
+              Earn While You Create
+            </h2>
+            <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 16, maxWidth: 500, margin: "0 auto 36px", lineHeight: 1.7 }}>
+              Share your referral link. When friends upgrade to Pro, you earn <strong style={{ color: "#FF9500" }}>30% commission</strong> — forever.
+            </p>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20, maxWidth: 700, margin: "0 auto 36px" }}>
+              {[
+                { icon: "🔗", title: "Get Link", desc: "Copy your unique referral link" },
+                { icon: "📢", title: "Share", desc: "Post on social media, WhatsApp, YouTube" },
+                { icon: "💵", title: "Earn", desc: "30% commission on every Pro upgrade" },
+                { icon: "🏦", title: "Withdraw", desc: "UPI, PayPal, or bank transfer" }
+              ].map((step, i) => (
+                <div key={i} style={{
+                  background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                  borderRadius: 16, padding: 24, textAlign: "center"
+                }}>
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>{step.icon}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>{step.title}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{step.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => user ? setSidebarOpen(true) : setShowLogin(true)} style={{
+              padding: "14px 36px", borderRadius: 14, border: "none",
+              background: "linear-gradient(135deg, #27AE60, #2ECC71)", color: "#fff",
+              fontSize: 16, fontWeight: 700,
+              boxShadow: "0 8px 25px rgba(39,174,96,0.3)"
+            }}>
+              {user ? "Open Earnings Dashboard" : "Login to Start Earning"}
+            </button>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "40px 16px", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>
+            <span style={{ fontWeight: 800, color: "#FF9500" }}>{CONFIG.APP_NAME}</span> — AI for Everyone, Income for Creators
+          </p>
+          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.15)" }}>
+            © 2025 · 33 Languages · 12 AI Tools · 🤖 {CONFIG.AGENT_NAME} AI Agent Included
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
