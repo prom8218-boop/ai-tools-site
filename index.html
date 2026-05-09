@@ -22,7 +22,6 @@
     // CONFIGURATION
     // ============================================
     const CONFIG = {
-      GEMINI_KEY: "AIzaSyDXEvIOwpum2qO_Y0dw9LbE3t5fA3VDejk",
       APP_NAME: "AIFreedom.in",
       FREE_DAILY: 15,
       PRO_PRICE: 299,
@@ -91,23 +90,20 @@
     // ============================================
     // GEMINI API CALLER
     // ============================================
+        // ============================================
+    // SECURE API CALLER (UPDATED)
+    // ============================================
     const callGemini = async (prompt, model = "gemini-1.5-flash") => {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${CONFIG.GEMINI_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.8, maxOutputTokens: 2048 }
-          }),
-        }
-      );
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
       const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
+      
+      if (data.error) throw new Error(data.error.message || "Something went wrong!");
       return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
     };
-
     const buildPrompt = (toolId, input, langName) => {
       const p = `Respond ONLY in ${langName}. Be helpful, detailed, and natural. `;
       const prompts = {
