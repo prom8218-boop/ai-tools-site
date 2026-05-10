@@ -27,11 +27,10 @@
     };
 
     // ============================================
-    // FIREBASE INITIALIZATION
+    //
     // ============================================
     const firebaseConfig = {
-      // ⚠️ নিচে আপনার Firebase থেকে পাওয়া আসল API Key বসান
-      apiKey: "আপনার_FIREBASE_API_KEY_এখানে_বসাবেন", 
+      apiKey: "AIzaSyBiK_8u6aCkc8k8E1jJOwrAQHgL2TUHKmw", 
       authDomain: "aifreedom-c0be1.firebaseapp.com",
       projectId: "aifreedom-c0be1",
       storageBucket: "aifreedom-c0be1.appspot.com",
@@ -39,19 +38,32 @@
       appId: "1:569502934272:web:15df91ba7960fc5a87baec"
     };
 
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const auth = firebase.auth();
-    const db = firebase.firestore(); // Database connected!
+    const db = firebase.firestore();
     const provider = new firebase.auth.GoogleAuthProvider();
+
+    // ============================================
+    // TOOLS & LANGUAGES
+    // ============================================
+    const LANGS = [
+      { code:"en", name:"English", flag:"🇺🇸" },
+      { code:"bn", name:"Bengali", flag:"🇧🇩" },
+      { code:"hi", name:"Hindi", flag:"🇮🇳" }
+    ];
 
     const TOOLS = [
       { id:"chat", icon:"💬", color:"#FF6B2B", free:true, name:"AI Chat", desc:"Unlimited conversation with Gemini AI" },
       { id:"image", icon:"🎨", color:"#9B59B6", free:true, name:"Image Prompt", desc:"Midjourney, DALL-E, Stable Diffusion prompts" },
-      { id:"seo", icon:"🔍", color:"#27AE60", free:false, name:"SEO Writer", desc:"Google-ranking articles with keywords" }
+      { id:"seo", icon:"🔍", color:"#27AE60", free:false, name:"SEO Writer", desc:"Google-ranking articles with keywords" },
+      { id:"translate", icon:"🌐", color:"#1F3A93", free:true, name:"AI Translator", desc:"Context-aware translations" },
+      { id:"code", icon:"💻", color:"#E67E22", free:true, name:"Code Generator", desc:"Write & debug in any programming language" },
+      { id:"social", icon:"📱", color:"#8E44AD", free:false, name:"Social Media", desc:"Instagram, Twitter, LinkedIn viral posts" }
     ];
 
+    // ============================================
+    // SECURE API CALLER & PROMPT BUILDER
+    // ============================================
     const callGemini = async (prompt) => {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -63,6 +75,24 @@
       return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
     };
 
+    const buildPrompt = (toolId, input, langName, extraStyle = "") => {
+      const p = `Respond ONLY in ${langName}. Be helpful and professional. `;
+      const prompts = {
+        chat: `${p}User says: "${input}". Give a conversational response.`,
+        image: `${p}Create 3 highly detailed AI image generation prompts for: "${input}". 
+               Apply this style strictly: ${extraStyle}. 
+               Include precise details about lighting, camera angle, fashion/clothing elements, and mood.`,
+        seo: `${p}Write an SEO-optimized article about: "${input}". Include catchy title and meta description.`,
+        translate: `Translate the following text to ${langName}: "${input}". Provide ONLY the translation.`,
+        code: `Write clean, well-commented code for: "${input}". Explain the logic briefly in ${langName}.`,
+        social: `${p}Create an engaging social media post about: "${input}". Include emojis and hashtags.`
+      };
+      return prompts[toolId] || `${p}${input}`;
+    };
+
+    // ============================================
+    // MAIN APP COMPONENT
+    // ============================================
     function App() {
       const [page, setPage] = useState("home");
       const [activeTool, setTool] = useState(null);
@@ -72,47 +102,34 @@
       const [user, setUser] = useState(null);
       const [credits, setCredits] = useState(0);
       const [showLogin, setShowLogin] = useState(false);
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+      
+      const [lang, setLang] = useState("English");
+      const [imageStyle, setImageStyle] = useState("Hyper-realistic 8K Portrait");
 
       useEffect(() => {
         auth.onAuthStateChanged(async (userAuth) => {
           if (userAuth) {
-            // Database-এ ইউজারের তথ্য খুঁজছে
             const userRef = db.collection('users').doc(userAuth.email);
             const docSnap = await userRef.get();
-            
             if (!docSnap.exists) {
-              // নতুন ইউজার হলে ডেটাবেসে সেভ করবে
-              await userRef.set({
-                name: userAuth.displayName,
-                email: userAuth.email,
-                photo: userAuth.photoURL,
-                credits: CONFIG.FREE_DAILY,
-                isPro: false
-              });
+              await userRef.set({ name: userAuth.displayName, email: userAuth.email, photo: userAuth.photoURL, credits: CONFIG.FREE_DAILY, isPro: false });
               setCredits(CONFIG.FREE_DAILY);
               setUser({ email: userAuth.email, name: userAuth.displayName, photo: userAuth.photoURL, isPro: false });
             } else {
-              // পুরোনো ইউজার হলে ডেটাবেস থেকে ডেটা লোড করবে
               const data = docSnap.data();
               setCredits(data.credits);
               setUser({ email: data.email, name: data.name, photo: data.photo, isPro: data.isPro });
             }
-          } else {
-            setUser(null);
-          }
+          } else { setUser(null); }
         });
       }, []);
 
       const handleGoogleLogin = async () => {
-        try {
-          await auth.signInWithPopup(provider);
-          setShowLogin(false);
-        } catch (error) {
-          alert("Login Failed: " + error.message);
-        }
+        try { await auth.signInWithPopup(provider); setShowLogin(false); } 
+        catch (error) { alert("Login Failed: " + error.message); }
       };
-
-      const logout = () => { auth.signOut(); setPage("home"); };
+      const logout = () => { auth.signOut(); setPage("home"); setSidebarOpen(false); };
 
       const run = async () => {
         if (!user) return alert("Please login to use tools!");
@@ -121,76 +138,121 @@
 
         setLoading(true); setOutput("");
         try {
-          const text = await callGemini(`Respond in English: ${input}`);
+          const finalPrompt = buildPrompt(activeTool, input, lang, imageStyle);
+          const text = await callGemini(finalPrompt);
           setOutput(text);
           
-          // ক্রেডিট কমানো হচ্ছে ডেটাবেস থেকে
           if (!user.isPro) {
             const newCredits = credits - 1;
             setCredits(newCredits);
             await db.collection('users').doc(user.email).update({ credits: newCredits });
           }
-        } catch(e) { 
-          setOutput("❌ Error: " + e.message); 
-        } finally { 
-          setLoading(false); 
-        }
+        } catch(e) { setOutput("❌ Error: " + e.message); } 
+        finally { setLoading(false); }
       };
 
+      const css = `
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #050508; color: #F0F0F0; font-family: 'Segoe UI', system-ui, sans-serif; overflow-x: hidden; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: #13131A; transition: 0.3s; z-index: 100; padding: 20px; border-right: 1px solid rgba(255,255,255,0.05); }
+        .sidebar.open { left: 0; }
+        .tool-card:hover { transform: translateY(-5px); border-color: rgba(255,107,43,0.5) !important; }
+      `;
+
       return (
-        <div style={{ background: "#050508", minHeight: "100vh", color: "#F0F0F0", fontFamily: 'sans-serif' }}>
+        <div style={{ display: "flex", minHeight: "100vh" }}>
+          <style>{css}</style>
           
-          {/* Navbar */}
-          <nav style={{ padding: "14px 20px", background: "rgba(5,5,8,0.95)", borderBottom: "1px solid rgba(255,107,43,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span onClick={() => setPage("home")} style={{ fontWeight: 900, fontSize: 20, cursor: "pointer", color: "#FF9500" }}>⚡ {CONFIG.APP_NAME}</span>
+          {/* Sidebar */}
+          <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
+              <span style={{ fontWeight: 900, fontSize: 20, color: "#FF9500" }}>⚡ AIFreedom</span>
+              <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 20, cursor: "pointer" }}>✕</button>
+            </div>
             
-            {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-                <span style={{ background: "rgba(255,107,43,0.1)", color: "#FF6B2B", padding: "5px 12px", borderRadius: 15, fontWeight: "bold" }}>
-                  🪙 {credits} Credits
-                </span>
-                <img src={user.photo} style={{ width: 32, height: 32, borderRadius: "50%" }} alt="User" />
-                <button onClick={logout} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer" }}>Logout</button>
+            {user && (
+              <div style={{ background: "rgba(255,107,43,0.1)", padding: 15, borderRadius: 12, marginBottom: 20, textAlign: "center", border: "1px solid rgba(255,107,43,0.2)" }}>
+                <img src={user.photo} style={{ width: 50, height: 50, borderRadius: "50%", marginBottom: 10 }} />
+                <h4 style={{ margin: 0 }}>{user.name}</h4>
+                <p style={{ margin: "5px 0", color: "#FF6B2B", fontWeight: "bold" }}>🪙 {credits} Credits Left</p>
+                {user.isPro ? <span style={{ background: "gold", color: "#000", padding: "2px 8px", borderRadius: 10, fontSize: 12, fontWeight: "bold" }}>PRO USER</span> : <button style={{ width: "100%", padding: "8px", marginTop: 10, borderRadius: 8, border: "none", background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff", cursor: "pointer", fontWeight: "bold" }}>Upgrade to Pro (₹299)</button>}
               </div>
-            ) : (
-              <button onClick={() => setShowLogin(true)} style={{ padding: "8px 18px", borderRadius: 20, border: "none", background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Login</button>
             )}
-          </nav>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button onClick={() => {setPage("home"); setSidebarOpen(false);}} style={{ padding: 12, background: page === "home" ? "rgba(255,255,255,0.1)" : "transparent", border: "none", color: "#fff", textAlign: "left", borderRadius: 8, cursor: "pointer" }}>🏠 Home / All Tools</button>
+              {user && <button onClick={logout} style={{ padding: 12, background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", textAlign: "left", borderRadius: 8, cursor: "pointer" }}>🚪 Logout</button>}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div style={{ flex: 1, transition: "0.3s", marginLeft: sidebarOpen ? 280 : 0 }}>
+            {/* Navbar */}
+            <nav style={{ padding: "15px 20px", background: "rgba(5,5,8,0.95)", borderBottom: "1px solid rgba(255,107,43,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#fff", fontSize: 24, cursor: "pointer" }}>☰</button>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
+                <select value={lang} onChange={e => setLang(e.target.value)} style={{ background: "#13131A", color: "#fff", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "5px 10px" }}>
+                  {LANGS.map(l => <option key={l.code} value={l.name}>{l.flag} {l.name}</option>)}
+                </select>
+                {!user && <button onClick={() => setShowLogin(true)} style={{ padding: "8px 18px", borderRadius: 20, border: "none", background: "#FF6B2B", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Login</button>}
+              </div>
+            </nav>
+
+            {/* Tool Grid */}
+            {page === "home" && (
+              <div style={{ padding: "40px 20px", maxWidth: 1000, margin: "0 auto" }}>
+                <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 30, textAlign: "center" }}>Unlock Your Creativity 🚀</h1>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
+                  {TOOLS.map(t => (
+                    <div key={t.id} className="tool-card" onClick={() => { setTool(t.id); setPage("tool"); setInput(""); setOutput(""); }} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid rgba(255,255,255,0.05)`, borderRadius: 16, padding: 24, cursor: "pointer", transition: "0.3s" }}>
+                      <div style={{ fontSize: 30, marginBottom: 15 }}>{t.icon}</div>
+                      <h3 style={{ fontSize: 18, marginBottom: 8 }}>{t.name} {!t.free && <span style={{ fontSize: 12, background: "gold", color: "#000", padding: "2px 6px", borderRadius: 4, marginLeft: 5 }}>PRO</span>}</h3>
+                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>{t.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Active Tool Area */}
+            {page === "tool" && activeTool && (
+              <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 20px" }}>
+                <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#FF9500", cursor: "pointer", marginBottom: 20, fontSize: 16 }}>← Back to Tools</button>
+                
+                <h2 style={{ marginBottom: 20 }}>{TOOLS.find(t => t.id === activeTool)?.icon} {TOOLS.find(t => t.id === activeTool)?.name}</h2>
+                
+                {/* Image Style Dropdown (Only shows if Image Prompt tool is selected) */}
+                {activeTool === "image" && (
+                  <select value={imageStyle} onChange={e => setImageStyle(e.target.value)} style={{ width: "100%", padding: 16, marginBottom: 16, borderRadius: 12, background: "#13131A", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 16, cursor: "pointer" }}>
+                    <option value="Hyper-realistic 8K Portrait">📸 Hyper-realistic 8K Portrait</option>
+                    <option value="Traditional Fashion (Saree/Ethnic)">👘 Traditional Fashion (Saree/Ethnic)</option>
+                    <option value="Luxury Modern Streetwear">🧥 Luxury Modern Streetwear</option>
+                    <option value="Cinematic Lighting & Moody">🎬 Cinematic Lighting & Moody</option>
+                    <option value="3D Anime Render (Unreal Engine 5)">👾 3D Anime Render (UE5)</option>
+                  </select>
+                )}
+
+                <textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Type your idea or prompt here..." style={{ width: "100%", height: 150, padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 16, resize: "vertical" }} />
+                
+                <button onClick={run} disabled={loading} style={{ marginTop: 16, width: "100%", padding: "16px", borderRadius: 12, background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff", border: "none", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
+                  {loading ? "✨ Generating..." : `🚀 Generate Result (-1 Credit)`}
+                </button>
+                
+                {output && <div style={{ marginTop: 30, padding: 25, borderRadius: 16, background: "#13131A", border: "1px solid rgba(255,255,255,0.05)", whiteSpace: "pre-wrap", lineHeight: "1.6", fontSize: 15 }}>{output}</div>}
+              </div>
+            )}
+          </div>
 
           {/* Login Modal */}
           {showLogin && (
             <div onClick={() => setShowLogin(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-              <div onClick={e => e.stopPropagation()} style={{ background: "#13131A", borderRadius: 24, padding: "40px", textAlign: "center", width: "90%", maxWidth: 400 }}>
-                <h2 style={{ marginBottom: 30 }}>Login to Continue</h2>
+              <div onClick={e => e.stopPropagation()} style={{ background: "#13131A", borderRadius: 24, padding: "40px", textAlign: "center", width: "90%", maxWidth: 400, border: "1px solid rgba(255,255,255,0.1)" }}>
+                <h2 style={{ marginBottom: 30 }}>Login to AIFreedom</h2>
                 <button onClick={handleGoogleLogin} style={{ width: "100%", padding: "14px", borderRadius: 12, background: "#fff", color: "#000", fontWeight: 700, cursor: "pointer", border: "none", fontSize: 16 }}>
                   Continue with Google
                 </button>
               </div>
-            </div>
-          )}
-
-          {/* Home Page */}
-          {page === "home" && (
-            <div style={{ textAlign: "center", padding: "50px 16px" }}>
-              <h1 style={{ fontSize: 40, fontWeight: 900, color: "#fff", marginBottom: 20 }}>AI Tools Collection</h1>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 18, maxWidth: 1000, margin: "0 auto", textAlign: "left" }}>
-                {TOOLS.map(t => (
-                  <div key={t.id} onClick={() => { setTool(t.id); setPage("tool"); setInput(""); setOutput(""); }} style={{ background: "rgba(255,255,255,0.02)", border: `1.5px solid ${t.color}20`, borderRadius: 18, padding: 24, cursor: "pointer" }}>
-                    <div style={{ fontSize: 24, marginBottom: 10 }}>{t.icon}</div>
-                    <div style={{ fontSize: 16, fontWeight: 800 }}>{t.name} {!t.free && "(PRO)"}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Tool Page */}
-          {page === "tool" && activeTool && (
-            <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 16px" }}>
-              <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#FF9500", cursor: "pointer", marginBottom: 20 }}>← Back</button>
-              <textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Type prompt..." style={{ width: "100%", height: 150, padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 16 }} />
-              <button onClick={run} disabled={loading} style={{ marginTop: 16, padding: "14px 30px", borderRadius: 12, background: "#FF6B2B", color: "#fff", border: "none", fontWeight: 700, cursor: "pointer" }}>{loading ? "Generating..." : "Generate (-1 Credit)"}</button>
-              {output && <div style={{ marginTop: 24, padding: 20, borderRadius: 12, background: "rgba(255,255,255,0.05)", whiteSpace: "pre-wrap", lineHeight: "1.6" }}>{output}</div>}
             </div>
           )}
         </div>
