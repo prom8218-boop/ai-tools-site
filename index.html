@@ -3,53 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIFreedom Pro - Powered by Neural AI Engine</title>
+    <title>AIFreedom Pro - Neural AI Trading Station</title>
     
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
     <style>
-        :root { --primary: #00ff88; --accent: #FF6B2B; --bg: #05070a; --card: rgba(12, 14, 18, 0.9); }
-        * { box-sizing: border-box; scroll-behavior: smooth; }
-
+        :root { --primary: #00ff88; --accent: #FF6B2B; --bg: #05070a; --card: #0c0e14; }
+        * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
+        
         body { 
             background: var(--bg);
-            background-image: linear-gradient(rgba(5, 7, 10, 0.8), rgba(5, 7, 10, 0.9)), 
-                              url('https://images.unsplash.com/photo-1611974717482-98252c6a4932?auto=format&fit=crop&w=2000');
+            background-image: radial-gradient(circle at 10% 10%, rgba(0, 255, 136, 0.05) 0%, transparent 40%),
+                              url('https://images.unsplash.com/photo-1611974717482-98252c6a4932?auto=format&fit=crop&w=1600');
             background-size: cover; background-attachment: fixed;
-            color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; 
+            color: #fff; font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(8, 10, 16, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 255, 136, 0.2); position: sticky; top: 0; z-index: 1000; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(8, 10, 16, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 255, 136, 0.2); position: sticky; top: 0; z-index: 1000; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 25px; }
         
-        .ai-badge { background: linear-gradient(90deg, #00ff88, #00bdff); color: #000; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; margin-left: 10px; }
-        
-        .btn-pro { background: var(--primary); color: #000; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; text-decoration: none; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); }
-        .btn-pro:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 255, 136, 0.5); }
+        .ai-badge { background: linear-gradient(90deg, #00ff88, #00bdff); color: #000; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .btn-vip { background: var(--primary); color: #000; padding: 12px 25px; border-radius: 10px; font-weight: 800; text-decoration: none; box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
 
-        .grid-main { display: grid; grid-template-columns: 1fr 400px; gap: 30px; }
-        .card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; }
+        .dashboard { display: grid; grid-template-columns: 1fr 400px; gap: 30px; margin-top: 20px; }
+        .card { background: var(--card); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 25px; }
 
+        .signal-item { background: rgba(0, 255, 136, 0.05); border-left: 4px solid var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+
+        /* Academy & Candlestick Dictionary */
         .edu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-top: 40px; }
-        .edu-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 20px; transition: 0.4s; position: relative; overflow: hidden; }
+        .edu-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 20px; transition: 0.4s; }
         .edu-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .edu-img { width: 100%; height: 200px; background: #000; border-radius: 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .edu-img img { width: 100%; height: 100%; object-fit: contain; }
         
-        .pattern-img { width: 100%; height: 200px; border-radius: 12px; margin-bottom: 15px; object-fit: cover; border: 1px solid #333; }
-        
-        .analysis-tag { font-size: 11px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; margin-bottom: 10px; display: block; }
-        
-        @media (max-width: 1000px) { .grid-main { grid-template-columns: 1fr; } }
+        .analysis-text { background: rgba(0, 255, 136, 0.03); padding: 15px; border-radius: 10px; font-size: 13px; color: #aaa; line-height: 1.6; }
+
+        .price-action-step { border-left: 4px solid var(--primary); background: rgba(255,255,255,0.02); padding: 20px; margin-bottom: 20px; border-radius: 0 15px 15px 0; }
+
+        @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr; } .nav-links { display: none; } }
     </style>
 </head>
 <body>
@@ -58,144 +55,153 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        const TradingChart = ({ symbol }) => {
+            const containerRef = useRef();
+            useEffect(() => {
+                new window.TradingView.widget({
+                    "width": "100%", "height": 500, "symbol": symbol, "interval": "15",
+                    "timezone": "Asia/Kolkata", "theme": "dark", "style": "1", "locale": "en",
+                    "container_id": containerRef.current.id
+                });
+            }, [symbol]);
+            return <div id={`tv_${symbol}`} ref={containerRef} style={{ borderRadius: '20px', overflow: 'hidden' }} />;
+        };
+
         const App = () => {
             const [market, setMarket] = useState("FOREXCOM:XAUUSD");
 
-            useEffect(() => {
-                const script = document.createElement('script');
-                script.src = 'https://s3.tradingview.com/tv.js';
-                script.async = true;
-                script.onload = () => {
-                    new window.TradingView.widget({
-                        "width": "100%", "height": 550, "symbol": market,
-                        "interval": "15", "timezone": "Asia/Kolkata", "theme": "dark",
-                        "style": "1", "locale": "en", "container_id": "tv_chart"
-                    });
-                };
-                document.head.appendChild(script);
-            }, [market]);
-
             return (
                 <div>
-                    <nav className="nav">
-                        <div style={{display:'flex', alignItems:'center'}}>
+                    <nav className="navbar">
+                        <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
                             <h2 style={{margin:0, color: 'var(--primary)', letterSpacing:'1px'}}>AIFREEDOM PRO</h2>
-                            <span className="ai-badge">NEURAL AI ACTIVE</span>
-                            <div id="google_translate_element" style={{marginLeft:'20px'}}></div>
+                            <span className="ai-badge">Neural Analyzer v4.0</span>
                         </div>
-                        <div style={{display:'flex', gap:'25px'}}>
-                            <a href="#signals" style={{color:'#fff', textDecoration:'none', fontWeight:'600'}}>Analysis</a>
-                            <a href="#academy" style={{color:'#fff', textDecoration:'none', fontWeight:'600'}}>Academy</a>
-                            <a href="https://wa.me/YOUR_NUMBER" className="btn-pro">JOIN VIP</a>
+                        <div style={{display:'flex', gap:'30px'}} className="nav-links">
+                            <a href="#signals" style={{color:'#fff', textDecoration:'none', fontWeight:'600'}}>Signals</a>
+                            <a href="#academy" style={{color:'#fff', textDecoration:'none', fontWeight:'600'}}>AI Academy</a>
+                            <a href="https://wa.me/YOUR_NUMBER" className="btn-vip">GET VIP ACCESS</a>
                         </div>
                     </nav>
 
                     <div className="container">
+                        {/* Live Trading Section */}
                         <section id="signals" style={{paddingTop:'40px'}}>
-                            <div className="grid-main">
+                            <div className="dashboard">
                                 <div>
                                     <div style={{display:'flex', gap:'10px', marginBottom:'20px', overflowX:'auto'}}>
-                                        {["FOREXCOM:XAUUSD", "BINANCE:BTCUSDT", "NSE:NIFTY", "MCX:GOLD1!"].map(s => (
-                                            <button key={s} onClick={() => setMarket(s)} style={{ padding: '10px 20px', borderRadius: '10px', background: market === s ? 'var(--primary)' : '#16181c', color: market === s ? '#000' : '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold', whiteSpace:'nowrap' }}>
+                                        {["FOREXCOM:XAUUSD", "BINANCE:BTCUSDT", "NSE:NIFTY", "NSE:BANKNIFTY", "MCX:GOLD1!"].map(s => (
+                                            <button key={s} onClick={() => setMarket(s)} style={{ padding: '10px 20px', borderRadius: '10px', background: market === s ? 'var(--primary)' : '#16181c', color: market === s ? '#000' : '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
                                                 {s.split(":")[1]}
                                             </button>
                                         ))}
                                     </div>
-                                    <div id="tv_chart" style={{borderRadius:'20px', overflow:'hidden', border:'1px solid #333'}}></div>
+                                    <TradingChart symbol={market} />
                                     
-                                    <div id="brokers" style={{display:'flex', gap:'15px', marginTop:'25px'}}>
-                                        <a href="https://join.dhan.co/?invite=MJABM75999" target="_blank" style={{flex:1, background:'#00d473', color:'#000', padding:'15px', borderRadius:'12px', textAlign:'center', fontWeight:'800', textDecoration:'none'}}>Dhan: India's Best Trading View Terminal</a>
-                                        <a href="https://www.xmglobal.com/referral?token=G9vMlFzRRyBPVDj3QukU3g" target="_blank" style={{flex:1, background:'#fff', color:'#000', padding:'15px', borderRadius:'12px', textAlign:'center', fontWeight:'800', textDecoration:'none'}}>XM: Global Forex Broker ($50 Bonus)</a>
+                                    <div style={{display:'flex', gap:'15px', marginTop:'25px'}}>
+                                        <a href="https://join.dhan.co/?invite=MJABM75999" target="_blank" style={{flex:1, background:'#00d473', color:'#000', padding:'15px', borderRadius:'12px', textAlign:'center', fontWeight:'800', textDecoration:'none'}}>Open Dhan (India)</a>
+                                        <a href="https://www.xmglobal.com/referral?token=G9vMlFzRRyBPVDj3QukU3g" target="_blank" style={{flex:1, background:'#fff', color:'#000', padding:'15px', borderRadius:'12px', textAlign:'center', fontWeight:'800', textDecoration:'none'}}>Trade XM (Global)</a>
                                     </div>
                                 </div>
 
+                                {/* AI Signal Feed */}
                                 <div className="card">
-                                    <h3 style={{marginTop:0, display:'flex', alignItems:'center'}}>
-                                        <span style={{color:var(--primary)}}>●</span> AI Neural Signals
-                                    </h3>
+                                    <h3 style={{marginBottom:'20px', color: 'var(--primary)'}}>Live AI Analysis</h3>
                                     
-                                    <div style={{background:'rgba(0,255,136,0.1)', padding:'15px', borderRadius:'12px', borderLeft:'4px solid #00ff88', marginBottom:'15px'}}>
+                                    <div className="signal-item">
                                         <div style={{display:'flex', justifyContent:'space-between', fontWeight:'800'}}>
-                                            <span>XAU/USD</span>
-                                            <span style={{color: '#00ff88'}}>BUY NOW</span>
+                                            <span>XAU/USD</span> <span style={{color: '#00ff88'}}>BUY</span>
                                         </div>
-                                        <p style={{fontSize:'12px', color:'#aaa', margin:'8px 0'}}>TP: 2350.50 | SL: 2310.00</p>
-                                        <div style={{fontSize:'11px', color:'gold'}}>Neural Confidence: 94%</div>
+                                        <p style={{fontSize:'12px', color:'#888', margin:'5px 0'}}>Entry: 2318 | Target: 2345 | SL: 2305</p>
+                                        <div style={{fontSize:'11px', color:'gold'}}>Neural Score: 94% Accuracy</div>
                                     </div>
 
-                                    <div style={{background:'rgba(255,68,68,0.1)', padding:'15px', borderRadius:'12px', borderLeft:'4px solid #ff4444', marginBottom:'15px'}}>
+                                    <div className="signal-item" style={{borderColor:'#ff4444', background:'rgba(255,68,68,0.05)'}}>
                                         <div style={{display:'flex', justifyContent:'space-between', fontWeight:'800'}}>
-                                            <span>BTC/USDT</span>
-                                            <span style={{color: '#ff4444'}}>SELL ZONE</span>
+                                            <span>BTC/USDT</span> <span style={{color: '#ff4444'}}>SELL</span>
                                         </div>
-                                        <p style={{fontSize:'12px', color:'#aaa', margin:'8px 0'}}>TP: 64,200 | SL: 67,500</p>
-                                        <div style={{fontSize:'11px', color:'gold'}}>Neural Confidence: 88%</div>
+                                        <p style={{fontSize:'12px', color:'#888', margin:'5px 0'}}>Entry: 65,200 | Target: 63,000 | SL: 66,500</p>
+                                        <div style={{fontSize:'11px', color:'gold'}}>Neural Score: 89% Accuracy</div>
                                     </div>
 
                                     <div style={{marginTop:'30px', padding:'20px', background:'rgba(255,255,255,0.02)', borderRadius:'15px', border:'1px solid #333'}}>
-                                        <h4 style={{margin:'0 0 10px 0', color:var(--primary)}}>AI Trading Tip:</h4>
-                                        <p style={{fontSize:'13px', color:'#ccc', lineHeight:'1.5'}}>Focus on "Fair Value Gaps" (FVG) and "Liquidity Sweeps". Market moves from one liquidity zone to another. Follow the AI score.</p>
+                                        <h4 style={{color: 'var(--primary)', marginBottom:'10px'}}>Neural Intelligence Note:</h4>
+                                        <p style={{fontSize:'12px', color:'#777', lineHeight:'1.5'}}>
+                                            "AI analyzing live liquidity sweeps. NIFTY showing institutional accumulation at support levels. High win-rate buy setups forming."
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </section>
 
-                        <section id="academy" style={{padding:'80px 0'}}>
-                            <h2 style={{fontSize:'40px', textAlign:'center', margin:'0 0 10px 0'}}>AI <span style={{color:var(--primary)}}>Pattern</span> Dictionary</h2>
-                            <p style={{textAlign:'center', color:'#888', marginBottom:'50px'}}>আপলোড করা ছবির ভিত্তিতে ক্যান্ডেলস্টিক এনালাইসিস</p>
+                        <hr style={{margin:'80px 0', opacity:'0.1'}} />
+
+                        {/* AI Academy Section */}
+                        <section id="academy" style={{paddingBottom:'100px'}}>
+                            <div style={{textAlign:'center', marginBottom:'60px'}}>
+                                <h1 style={{fontSize:'48px', fontWeight:'800'}}>AI Trading <span style={{color: 'var(--primary)'}}>Academy</span></h1>
+                                <p style={{color:'#666'}}>Mastering Candlesticks & Price Action Step-by-Step</p>
+                            </div>
 
                             <div className="edu-grid">
-                                {/* Pattern 1 */}
                                 <div className="edu-card">
-                                    <span className="analysis-tag">Trend Reversal</span>
-                                    <img src="https://www.tradingwithrayner.com/wp-content/uploads/2018/11/Hammer.png" className="pattern-img" alt="Hammer" />
-                                    <h3>The Bullish Hammer</h3>
-                                    <p style={{fontSize:'14px', color:'#aaa'}}>যখন মার্কেট অনেক নিচে নামে এবং একটি হাতুড়ির মতো ক্যান্ডেল তৈরি করে, তখন বায়াররা শক্তিশালী হয়।</p>
-                                    <div style={{fontSize:'12px', color:var(--primary), fontWeight:'bold'}}>AI Usage: Buy at Support Level</div>
+                                    <div className="edu-img">
+                                        <img src="https://www.tradingwithrayner.com/wp-content/uploads/2018/11/Hammer.png" alt="Hammer" />
+                                    </div>
+                                    <h3 style={{color: 'var(--primary)'}}>Bullish Hammer</h3>
+                                    <p style={{fontSize:'14px', color:'#777', margin:'10px 0'}}>Trend Reversal Pattern</p>
+                                    <div className="analysis-text">
+                                        <b>AI Analysis:</b> এই ক্যান্ডেলটি দেখায় যে সেলাররা দাম কমানোর চেষ্টা করলেও বায়াররা শক্তিশালীভাবে ফিরে এসেছে। সাপোর্ট লেভেলে এটি একটি শক্তিশালী বাই সংকেত।
+                                    </div>
                                 </div>
 
-                                {/* Pattern 2 */}
                                 <div className="edu-card">
-                                    <span className="analysis-tag">Trend Reversal</span>
-                                    <img src="https://www.tradingwithrayner.com/wp-content/uploads/2018/11/Shooting-Star.png" className="pattern-img" alt="Shooting Star" />
-                                    <h3>Shooting Star</h3>
-                                    <p style={{fontSize:'14px', color:'#aaa'}}>এটি আপট্রেন্ডের মাথায় তৈরি হয়। লম্বা লেজটি দেখায় যে বিক্রেতারা দামকে নিচে টেনে নামিয়ে আনছে।</p>
-                                    <div style={{fontSize:'12px', color:'#ff4444', fontWeight:'bold'}}>AI Usage: Sell at Resistance Zone</div>
+                                    <div className="edu-img">
+                                        <img src="https://www.tradingwithrayner.com/wp-content/uploads/2018/11/Shooting-Star.png" alt="Shooting Star" />
+                                    </div>
+                                    <h3 style={{color: '#ff4444'}}>Shooting Star</h3>
+                                    <p style={{fontSize:'14px', color:'#777', margin:'10px 0'}}>Bearish Reversal Pattern</p>
+                                    <div className="analysis-text">
+                                        <b>AI Analysis:</b> আপট্রেন্ডের মাথায় এই ক্যান্ডেল দেখা দিলে বুঝতে হবে বায়াররা ক্লান্ত হয়ে গেছে। এটি একটি শক্তিশালী সেল সংকেত।
+                                    </div>
                                 </div>
 
-                                {/* Pattern 3 */}
                                 <div className="edu-card">
-                                    <span className="analysis-tag">Market Momentum</span>
-                                    <img src="https://img.freepik.com/premium-photo/financial-candlestick-chart-trading-stock-exchange-analysis_1017-43477.jpg" className="pattern-img" alt="Engulfing" />
-                                    <h3>Engulfing Pattern</h3>
-                                    <p style={{fontSize:'14px', color:'#aaa'}}>পূর্বের ক্যান্ডেলকে যখন নতুন একটি বড় ক্যান্ডেল পুরোপুরি ঢেকে ফেলে, তখন ট্রেন্ড পরিবর্তনের সংকেত দেয়।</p>
-                                    <div style={{fontSize:'12px', color:'gold', fontWeight:'bold'}}>AI Usage: Best for Scalping (5m/15m)</div>
+                                    <div className="edu-img">
+                                        <img src="https://www.tradingwithrayner.com/wp-content/uploads/2018/11/Bullish-Engulfing.png" alt="Engulfing" />
+                                    </div>
+                                    <h3 style={{color: 'var(--primary)'}}>Bullish Engulfing</h3>
+                                    <p style={{fontSize:'14px', color:'#777', margin:'10px 0'}}>Momentum Confirmation</p>
+                                    <div className="analysis-text">
+                                        <b>AI Analysis:</b> যখন একটি সবুজ ক্যান্ডেল আগের লাল ক্যান্ডেলকে পুরোপুরি গিলে ফেলে, তখন বুঝতে হবে বায়াররা এখন মার্কেটের নিয়ন্ত্রণ নিয়েছে।
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Deep Analysis of Uploaded Image Concept */}
-                            <div style={{marginTop:'60px', padding:'40px', background:'rgba(0, 255, 136, 0.02)', borderRadius:'30px', border:'1px solid rgba(0, 255, 136, 0.1)'}}>
-                                <h3 style={{fontSize:'28px', color:var(--primary), marginBottom:'20px'}}>How AI Analyzes These Patterns:</h3>
-                                <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))', gap:'30px'}}>
-                                    <div>
-                                        <h4 style={{color:'#fff'}}>১. Liquidity Capture</h4>
-                                        <p style={{fontSize:'14px', color:'#888'}}>বড় ব্যাংকগুলো রিটেইল ট্রেডারদের স্টপ লস হিট করানোর জন্য মার্কেটে ফেক মুভ দেয়। ক্যান্ডেলস্টিক প্যাটার্ন দেখে আমরা সেই ফেক মুভ চিনি।</p>
-                                    </div>
-                                    <div>
-                                        <h4 style={{color:'#fff'}}>২. Multi-Timeframe Analysis</h4>
-                                        <p style={{fontSize:'14px', color:'#888'}}>শুধু ১ মিনিটে প্যাটার্ন দেখলে হবে না। ১ ঘণ্টা এবং ১৫ মিনিটের ট্রেন্ড যদি একই হয়, তবেই এন্ট্রি নিতে হবে।</p>
-                                    </div>
-                                    <div>
-                                        <h4 style={{color:'#fff'}}>৩. Risk-to-Reward Ratio</h4>
-                                        <p style={{fontSize:'14px', color:'#888'}}>AI সবসময় ১:২ বা ১:৩ রিস্ক রিওয়ার্ড মেইনটেইন করার পরামর্শ দেয়। স্টপ লস অবশ্যই ছোট রাখুন।</p>
-                                    </div>
+                            {/* Price Action Steps */}
+                            <div style={{marginTop:'70px', padding:'40px', background:'rgba(255,255,255,0.02)', borderRadius:'30px', border:'1px solid rgba(255,255,255,0.05)'}}>
+                                <h2 style={{fontSize:'32px', marginBottom:'40px', borderLeft:'6px solid var(--primary)', paddingLeft:'20px'}}>Neural Price Action Strategy</h2>
+                                
+                                <div className="price-action-step">
+                                    <h3>Step 1: Trend Identification (Context)</h3>
+                                    <p style={{color:'#777', marginTop:'10px'}}>সবসময় হায়ার টাইমফ্রেমে ট্রেন্ড চেক করুন। ট্রেন্ডের বিপরীতে কখনো ট্রেড নেবেন না।</p>
+                                </div>
+
+                                <div className="price-action-step">
+                                    <h3>Step 2: Key Level Identification (Level)</h3>
+                                    <p style={{color:'#777', marginTop:'10px'}}>সাপোর্ট এবং রেজিস্ট্যান্স জোনগুলো মার্ক করুন যেখানে ব্যাংকগুলো তাদের অর্ডার বসিয়ে রাখে।</p>
+                                </div>
+
+                                <div className="price-action-step">
+                                    <h3>Step 3: Candlestick Confirmation (Signal)</h3>
+                                    <p style={{color:'#777', marginTop:'10px'}}>সাপোর্ট লেভেলে হ্যামার বা এনগালফিং প্যাটার্ন দেখলে তবেই এন্ট্রি নিন। এটি এআই কনফার্মেশন।</p>
                                 </div>
                             </div>
                         </section>
                     </div>
 
-                    <footer style={{textAlign:'center', padding:'50px', borderTop:'1px solid #111', color:'#444'}}>
-                        <p>© 2026 AIFreedom Neural Network | Full Power AI Integrated</p>
+                    <footer style={{textAlign:'center', padding:'50px', borderTop:'1px solid rgba(255,255,255,0.05)', color:'#444'}}>
+                        <p>© 2026 AIFreedom Global Intelligence Hub. All Rights Reserved.</p>
                     </footer>
                 </div>
             );
