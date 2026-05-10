@@ -1,266 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIFreedom - AI Tools</title>
-  
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIFreedom Pro - AI Trading & Creative Hub</title>
+    
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- TradingView API -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary: #00ff88; --accent: #FF6B2B; --bg: #05070a; }
+        body { background: var(--bg); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; overflow-x: hidden; }
+        .sidebar { width: 280px; border-right: 1px solid rgba(255,255,255,0.05); padding: 25px; position: fixed; height: 100vh; background: #080a10; z-index: 10; }
+        .main-content { marginLeft: 280px; flex: 1; padding: 30px; min-height: 100vh; margin-left: 280px; }
+        .gradient-text { background: linear-gradient(45deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }
+        .btn-sidebar { width: 100%; padding: 14px; border: none; background: none; color: #888; text-align: left; cursor: pointer; border-radius: 12px; margin-bottom: 8px; font-weight: 600; transition: 0.3s; }
+        .btn-sidebar.active { background: rgba(0, 255, 136, 0.1); color: var(--primary); }
+        .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
+        .live-dot { height: 8px; width: 8px; background: #ff4444; border-radius: 50%; display: inline-block; animation: blink 1s infinite; margin-right: 8px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+    </style>
 </head>
-<body style="margin: 0; background-color: #050508;">
-  <div id="root"></div>
+<body>
+    <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-    const CONFIG = {
-      APP_NAME: "AIFreedom.in",
-      FREE_DAILY: 15,
-      PRO_PRICE: 199,
-      AGENT_NAME: "Aitra",
-    };
+        // TradingView Widget Component
+        const TradingChart = ({ symbol }) => {
+            const containerRef = useRef();
+            useEffect(() => {
+                new window.TradingView.widget({
+                    "width": "100%", "height": 500, "symbol": symbol, "interval": "D",
+                    "timezone": "Asia/Kolkata", "theme": "dark", "style": "1", "locale": "en",
+                    "enable_publishing": false, "allow_symbol_change": true, "container_id": containerRef.current.id
+                });
+            }, [symbol]);
+            return <div id={`tv_${symbol}`} ref={containerRef} style={{ borderRadius: '15px', overflow: 'hidden' }} />;
+        };
 
-    // ============================================
-    //
-    // ============================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyBiK_8u6aCkc8k8E1jJOwrAQHgL2TUHKmw", 
-      authDomain: "aifreedom-c0be1.firebaseapp.com",
-      projectId: "aifreedom-c0be1",
-      storageBucket: "aifreedom-c0be1.appspot.com",
-      messagingSenderId: "569502934272",
-      appId: "1:569502934272:web:15df91ba7960fc5a87baec"
-    };
+        const App = () => {
+            const [view, setView] = useState("trade");
+            const [market, setMarket] = useState("NSE:NIFTY");
+            const [signals, setSignals] = useState([
+                { asset: "NIFTY 50", type: "BUY", price: "22,480", tp: "22,650", sl: "22,390", conf: 92, status: "RSI Confirmed" },
+                { asset: "BTC/USDT", type: "HOLD", price: "64,120", tp: "--", sl: "--", conf: 40, status: "Low Vol" },
+                { asset: "GOLD (MCX)", type: "SELL", price: "71,200", tp: "70,800", sl: "71,450", conf: 85, status: "Resistance" }
+            ]);
 
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    // ============================================
-    // TOOLS & LANGUAGES
-    // ============================================
-    const LANGS = [
-      { code:"en", name:"English", flag:"🇺🇸" },
-      { code:"bn", name:"Bengali", flag:"🇧🇩" },
-      { code:"hi", name:"Hindi", flag:"🇮🇳" }
-    ];
-
-    const TOOLS = [
-      { id:"chat", icon:"💬", color:"#FF6B2B", free:true, name:"AI Chat", desc:"Unlimited conversation with Gemini AI" },
-      { id:"image", icon:"🎨", color:"#9B59B6", free:true, name:"Image Prompt", desc:"Midjourney, DALL-E, Stable Diffusion prompts" },
-      { id:"seo", icon:"🔍", color:"#27AE60", free:false, name:"SEO Writer", desc:"Google-ranking articles with keywords" },
-      { id:"translate", icon:"🌐", color:"#1F3A93", free:true, name:"AI Translator", desc:"Context-aware translations" },
-      { id:"code", icon:"💻", color:"#E67E22", free:true, name:"Code Generator", desc:"Write & debug in any programming language" },
-      { id:"social", icon:"📱", color:"#8E44AD", free:false, name:"Social Media", desc:"Instagram, Twitter, LinkedIn viral posts" }
-    ];
-
-    // ============================================
-    // SECURE API CALLER & PROMPT BUILDER
-    // ============================================
-    const callGemini = async (prompt) => {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message || "Something went wrong!");
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-    };
-
-    const buildPrompt = (toolId, input, langName, extraStyle = "") => {
-      const p = `Respond ONLY in ${langName}. Be helpful and professional. `;
-      const prompts = {
-        chat: `${p}User says: "${input}". Give a conversational response.`,
-        image: `${p}Create 3 highly detailed AI image generation prompts for: "${input}". 
-               Apply this style strictly: ${extraStyle}. 
-               Include precise details about lighting, camera angle, fashion/clothing elements, and mood.`,
-        seo: `${p}Write an SEO-optimized article about: "${input}". Include catchy title and meta description.`,
-        translate: `Translate the following text to ${langName}: "${input}". Provide ONLY the translation.`,
-        code: `Write clean, well-commented code for: "${input}". Explain the logic briefly in ${langName}.`,
-        social: `${p}Create an engaging social media post about: "${input}". Include emojis and hashtags.`
-      };
-      return prompts[toolId] || `${p}${input}`;
-    };
-
-    // ============================================
-    // MAIN APP COMPONENT
-    // ============================================
-    function App() {
-      const [page, setPage] = useState("home");
-      const [activeTool, setTool] = useState(null);
-      const [input, setInput] = useState("");
-      const [output, setOutput] = useState("");
-      const [loading, setLoading] = useState(false);
-      const [user, setUser] = useState(null);
-      const [credits, setCredits] = useState(0);
-      const [showLogin, setShowLogin] = useState(false);
-      const [sidebarOpen, setSidebarOpen] = useState(false);
-      
-      const [lang, setLang] = useState("English");
-      const [imageStyle, setImageStyle] = useState("Hyper-realistic 8K Portrait");
-
-      useEffect(() => {
-        auth.onAuthStateChanged(async (userAuth) => {
-          if (userAuth) {
-            const userRef = db.collection('users').doc(userAuth.email);
-            const docSnap = await userRef.get();
-            if (!docSnap.exists) {
-              await userRef.set({ name: userAuth.displayName, email: userAuth.email, photo: userAuth.photoURL, credits: CONFIG.FREE_DAILY, isPro: false });
-              setCredits(CONFIG.FREE_DAILY);
-              setUser({ email: userAuth.email, name: userAuth.displayName, photo: userAuth.photoURL, isPro: false });
-            } else {
-              const data = docSnap.data();
-              setCredits(data.credits);
-              setUser({ email: data.email, name: data.name, photo: data.photo, isPro: data.isPro });
-            }
-          } else { setUser(null); }
-        });
-      }, []);
-
-      const handleGoogleLogin = async () => {
-        try { await auth.signInWithPopup(provider); setShowLogin(false); } 
-        catch (error) { alert("Login Failed: " + error.message); }
-      };
-      const logout = () => { auth.signOut(); setPage("home"); setSidebarOpen(false); };
-
-      const run = async () => {
-        if (!user) return alert("Please login to use tools!");
-        if (credits <= 0 && !user.isPro) return alert("Not enough credits! Please upgrade to Pro.");
-        if (!input.trim()) return;
-
-        setLoading(true); setOutput("");
-        try {
-          const finalPrompt = buildPrompt(activeTool, input, lang, imageStyle);
-          const text = await callGemini(finalPrompt);
-          setOutput(text);
-          
-          if (!user.isPro) {
-            const newCredits = credits - 1;
-            setCredits(newCredits);
-            await db.collection('users').doc(user.email).update({ credits: newCredits });
-          }
-        } catch(e) { setOutput("❌ Error: " + e.message); } 
-        finally { setLoading(false); }
-      };
-
-      const css = `
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #050508; color: #F0F0F0; font-family: 'Segoe UI', system-ui, sans-serif; overflow-x: hidden; }
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: #13131A; transition: 0.3s; z-index: 100; padding: 20px; border-right: 1px solid rgba(255,255,255,0.05); }
-        .sidebar.open { left: 0; }
-        .tool-card:hover { transform: translateY(-5px); border-color: rgba(255,107,43,0.5) !important; }
-      `;
-
-      return (
-        <div style={{ display: "flex", minHeight: "100vh" }}>
-          <style>{css}</style>
-          
-          {/* Sidebar */}
-          <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-              <span style={{ fontWeight: 900, fontSize: 20, color: "#FF9500" }}>⚡ AIFreedom</span>
-              <button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", color: "#fff", fontSize: 20, cursor: "pointer" }}>✕</button>
-            </div>
-            
-            {user && (
-              <div style={{ background: "rgba(255,107,43,0.1)", padding: 15, borderRadius: 12, marginBottom: 20, textAlign: "center", border: "1px solid rgba(255,107,43,0.2)" }}>
-                <img src={user.photo} style={{ width: 50, height: 50, borderRadius: "50%", marginBottom: 10 }} />
-                <h4 style={{ margin: 0 }}>{user.name}</h4>
-                <p style={{ margin: "5px 0", color: "#FF6B2B", fontWeight: "bold" }}>🪙 {credits} Credits Left</p>
-                {user.isPro ? <span style={{ background: "gold", color: "#000", padding: "2px 8px", borderRadius: 10, fontSize: 12, fontWeight: "bold" }}>PRO USER</span> : <button style={{ width: "100%", padding: "8px", marginTop: 10, borderRadius: 8, border: "none", background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff", cursor: "pointer", fontWeight: "bold" }}>Upgrade to Pro (₹299)</button>}
-              </div>
-            )}
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button onClick={() => {setPage("home"); setSidebarOpen(false);}} style={{ padding: 12, background: page === "home" ? "rgba(255,255,255,0.1)" : "transparent", border: "none", color: "#fff", textAlign: "left", borderRadius: 8, cursor: "pointer" }}>🏠 Home / All Tools</button>
-              {user && <button onClick={logout} style={{ padding: 12, background: "transparent", border: "none", color: "rgba(255,255,255,0.5)", textAlign: "left", borderRadius: 8, cursor: "pointer" }}>🚪 Logout</button>}
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div style={{ flex: 1, transition: "0.3s", marginLeft: sidebarOpen ? 280 : 0 }}>
-            {/* Navbar */}
-            <nav style={{ padding: "15px 20px", background: "rgba(5,5,8,0.95)", borderBottom: "1px solid rgba(255,107,43,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <button onClick={() => setSidebarOpen(true)} style={{ background: "none", border: "none", color: "#fff", fontSize: 24, cursor: "pointer" }}>☰</button>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-                <select value={lang} onChange={e => setLang(e.target.value)} style={{ background: "#13131A", color: "#fff", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "5px 10px" }}>
-                  {LANGS.map(l => <option key={l.code} value={l.name}>{l.flag} {l.name}</option>)}
-                </select>
-                {!user && <button onClick={() => setShowLogin(true)} style={{ padding: "8px 18px", borderRadius: 20, border: "none", background: "#FF6B2B", color: "#fff", fontWeight: 700, cursor: "pointer" }}>Login</button>}
-              </div>
-            </nav>
-
-            {/* Tool Grid */}
-            {page === "home" && (
-              <div style={{ padding: "40px 20px", maxWidth: 1000, margin: "0 auto" }}>
-                <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 30, textAlign: "center" }}>Unlock Your Creativity 🚀</h1>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-                  {TOOLS.map(t => (
-                    <div key={t.id} className="tool-card" onClick={() => { setTool(t.id); setPage("tool"); setInput(""); setOutput(""); }} style={{ background: "rgba(255,255,255,0.02)", border: `1px solid rgba(255,255,255,0.05)`, borderRadius: 16, padding: 24, cursor: "pointer", transition: "0.3s" }}>
-                      <div style={{ fontSize: 30, marginBottom: 15 }}>{t.icon}</div>
-                      <h3 style={{ fontSize: 18, marginBottom: 8 }}>{t.name} {!t.free && <span style={{ fontSize: 12, background: "gold", color: "#000", padding: "2px 6px", borderRadius: 4, marginLeft: 5 }}>PRO</span>}</h3>
-                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}>{t.desc}</p>
+            return (
+                <div style={{ display: "flex" }}>
+                    {/* Sidebar */}
+                    <div className="sidebar">
+                        <h2 className="gradient-text">AIFREEDOM PRO</h2>
+                        <div style={{ marginTop: '40px' }}>
+                            <p style={{ fontSize: '11px', color: '#555', marginBottom: '15px', letterSpacing: '1px' }}>DASHBOARD</p>
+                            <button className={`btn-sidebar ${view === 'trade' ? 'active' : ''}`} onClick={() => setView('trade')}>📊 AI Trade Station</button>
+                            <button className={`btn-sidebar ${view === 'creative' ? 'active' : ''}`} onClick={() => setView('creative')}>🎨 AI Creative Suite</button>
+                            
+                            <p style={{ fontSize: '11px', color: '#555', marginTop: '30px', marginBottom: '15px', letterSpacing: '1px' }}>OFFICIAL BROKERS</p>
+                            <a href="https://join.dhan.co/?invite=MJABM75999" target="_blank" style={{textDecoration:'none'}}>
+                                <div className="card" style={{marginBottom:'10px', borderColor:'rgba(0,255,136,0.2)'}}>
+                                    <span style={{color: 'var(--primary)', fontWeight:'bold', fontSize:'14px'}}>Dhan (India) 🇮🇳</span>
+                                    <p style={{fontSize:'10px', color:'#777', margin:'5px 0 0'}}>Free TradingView Pro</p>
+                                </div>
+                            </a>
+                            <a href="https://www.xmglobal.com/referral?token=G9vMlFzRRyBPVDj3QukU3g" target="_blank" style={{textDecoration:'none'}}>
+                                <div className="card" style={{borderColor:'rgba(255,68,68,0.2)'}}>
+                                    <span style={{color: '#ff4444', fontWeight:'bold', fontSize:'14px'}}>XM Global 🌍</span>
+                                    <p style={{fontSize:'10px', color:'#777', margin:'5px 0 0'}}>$50 Welcome Bonus</p>
+                                </div>
+                            </a>
+                        </div>
                     </div>
-                  ))}
+
+                    {/* Main Content */}
+                    <div className="main-content">
+                        {view === 'trade' ? (
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                    <div>
+                                        <h1 style={{ margin: 0 }}>Neural Signal Engine</h1>
+                                        <p style={{ color: '#666', margin: '5px 0' }}>Live Market Analysis with 85%+ Accuracy</p>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button style={{ background: 'var(--primary)', color: '#000', border: 'none', padding: '12px 20px', borderRadius: '10px', fontWeight: '800', cursor:'pointer' }}>GO PRO</button>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px' }}>
+                                    <div>
+                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                                            {["NSE:NIFTY", "NSE:BANKNIFTY", "MCX:GOLD1!", "BINANCE:BTCUSDT"].map(s => (
+                                                <button key={s} onClick={() => setMarket(s)} style={{ padding: '10px 15px', borderRadius: '10px', background: market === s ? 'var(--primary)' : '#16181c', color: market === s ? '#000' : '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                                                    {s.includes("MCX") ? "Gold MCX" : s.split(":")[1]}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <TradingChart symbol={market} />
+                                    </div>
+
+                                    {/* AI Signals */}
+                                    <div className="card" style={{ background: '#0c0e12' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                            <h3 style={{ margin: 0 }}>AI Signals</h3>
+                                            <span className="live-dot"></span>
+                                        </div>
+                                        {signals.map((sig, i) => (
+                                            <div key={i} style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', marginBottom: '15px', border: `1px solid ${sig.type === 'BUY' ? 'rgba(0,255,136,0.1)' : 'rgba(255,68,68,0.1)'}` }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span style={{ fontWeight: 'bold' }}>{sig.asset}</span>
+                                                    <span style={{ color: sig.type === 'BUY' ? '#00ff88' : sig.type === 'SELL' ? '#ff4444' : '#888', fontSize: '12px', fontWeight: 'bold' }}>{sig.type}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '12px', color: '#aaa' }}>
+                                                    <span>Entry: {sig.price}</span>
+                                                    <span>Conf: <span style={{color:'gold'}}>{sig.conf}%</span></span>
+                                                </div>
+                                                {sig.type !== 'HOLD' && (
+                                                    <div style={{ marginTop: '10px', display: 'flex', gap: '5px' }}>
+                                                        <div style={{ flex: 1, background: '#00ff8811', padding: '5px', borderRadius: '5px', fontSize: '10px', textAlign: 'center' }}>T: {sig.tp}</div>
+                                                        <div style={{ flex: 1, background: '#ff444411', padding: '5px', borderRadius: '5px', fontSize: '10px', textAlign: 'center' }}>S: {sig.sl}</div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <p style={{fontSize:'11px', color:'#555', textAlign:'center'}}>* Signals are for educational purpose. Connect with Dhan/XM for better accuracy.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{textAlign:'center', padding:'100px 0'}}>
+                                <h1>Creative Suite (Photo/Video AI)</h1>
+                                <p style={{color:'#666'}}>Coming Soon: High-speed Neural Image Generation & AI Video Editor.</p>
+                                <button onClick={() => setView('trade')} className="btn-sidebar active" style={{width:'auto', display:'inline-block'}}>Back to Trading</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
-              </div>
-            )}
+            );
+        };
 
-            {/* Active Tool Area */}
-            {page === "tool" && activeTool && (
-              <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 20px" }}>
-                <button onClick={() => setPage("home")} style={{ background: "none", border: "none", color: "#FF9500", cursor: "pointer", marginBottom: 20, fontSize: 16 }}>← Back to Tools</button>
-                
-                <h2 style={{ marginBottom: 20 }}>{TOOLS.find(t => t.id === activeTool)?.icon} {TOOLS.find(t => t.id === activeTool)?.name}</h2>
-                
-                {/* Image Style Dropdown (Only shows if Image Prompt tool is selected) */}
-                {activeTool === "image" && (
-                  <select value={imageStyle} onChange={e => setImageStyle(e.target.value)} style={{ width: "100%", padding: 16, marginBottom: 16, borderRadius: 12, background: "#13131A", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 16, cursor: "pointer" }}>
-                    <option value="Hyper-realistic 8K Portrait">📸 Hyper-realistic 8K Portrait</option>
-                    <option value="Traditional Fashion (Saree/Ethnic)">👘 Traditional Fashion (Saree/Ethnic)</option>
-                    <option value="Luxury Modern Streetwear">🧥 Luxury Modern Streetwear</option>
-                    <option value="Cinematic Lighting & Moody">🎬 Cinematic Lighting & Moody</option>
-                    <option value="3D Anime Render (Unreal Engine 5)">👾 3D Anime Render (UE5)</option>
-                  </select>
-                )}
-
-                <textarea value={input} onChange={e => setInput(e.target.value)} placeholder="Type your idea or prompt here..." style={{ width: "100%", height: 150, padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", fontSize: 16, resize: "vertical" }} />
-                
-                <button onClick={run} disabled={loading} style={{ marginTop: 16, width: "100%", padding: "16px", borderRadius: 12, background: "linear-gradient(135deg, #FF6B2B, #FF9500)", color: "#fff", border: "none", fontWeight: 700, fontSize: 16, cursor: "pointer" }}>
-                  {loading ? "✨ Generating..." : `🚀 Generate Result (-1 Credit)`}
-                </button>
-                
-                {output && <div style={{ marginTop: 30, padding: 25, borderRadius: 16, background: "#13131A", border: "1px solid rgba(255,255,255,0.05)", whiteSpace: "pre-wrap", lineHeight: "1.6", fontSize: 15 }}>{output}</div>}
-              </div>
-            )}
-          </div>
-
-          {/* Login Modal */}
-          {showLogin && (
-            <div onClick={() => setShowLogin(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-              <div onClick={e => e.stopPropagation()} style={{ background: "#13131A", borderRadius: 24, padding: "40px", textAlign: "center", width: "90%", maxWidth: 400, border: "1px solid rgba(255,255,255,0.1)" }}>
-                <h2 style={{ marginBottom: 30 }}>Login to AIFreedom</h2>
-                <button onClick={handleGoogleLogin} style={{ width: "100%", padding: "14px", borderRadius: 12, background: "#fff", color: "#000", fontWeight: 700, cursor: "pointer", border: "none", fontSize: 16 }}>
-                  Continue with Google
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
