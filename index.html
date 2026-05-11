@@ -1222,7 +1222,172 @@ footer {
   });
 })();
 </script>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
 
+/* ── মার্কেট ডাটা (স্ট্যাটিক ডাটা যা পরে ডাইনামিক হবে) ── */
+const TICKER = [
+  { sym: 'BTC/USDT', price: '49,412', chg: '+3.24%', up: true },
+  { sym: 'ETH/USDT', price: '3,284', chg: '+1.87%', up: true },
+  { sym: 'XAU/USD', price: '2,350', chg: '+0.50%', up: true }
+];
+
+const FEATURES = [
+  { icon: '⚡', name: 'AI Trading Signals', tag: 'LIVE', desc: 'Real-time buy/sell signals from our AI models.' },
+  { icon: '📊', name: 'Pro Terminal', tag: 'PRO', desc: 'Advanced charting with institutional indicators.' },
+  { icon: '🧠', name: 'Smart Money Concepts', tag: 'NEW', desc: 'Identify liquidity sweeps and order blocks automatically.' }
+];
+
+/* ── TRADINGVIEW CHART COMPONENT ── */
+function TradingViewChart() {
+  const container = useRef();
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          "width": "100%",
+          "height": 350,
+          "symbol": "BINANCE:BTCUSDT",
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "toolbar_bg": "#f1f3f6",
+          "enable_publishing": false,
+          "hide_top_toolbar": true,
+          "container_id": container.current.id
+        });
+      }
+    };
+    document.head.appendChild(script);
+  }, []);
+  return <div id="tv_chart_container" ref={container} style={{ borderRadius: '12px', overflow: 'hidden' }} />;
+}
+
+/* ── MAIN APP ── */
+function App() {
+  const [activeTab, setActiveTab] = useState('chart');
+  const [btcPrice, setBtcPrice] = useState('49,412');
+  const [btcChange, setBtcChange] = useState('+3.24%');
+  const [scrolled, setScrolled] = useState(false);
+
+  // ১. বাইন্যান্স এপিআই থেকে লাইভ প্রাইস আপডেট
+  useEffect(() => {
+    const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setBtcPrice(parseFloat(data.c).toLocaleString());
+      setBtcChange((data.P > 0 ? '+' : '') + data.P + '%');
+    };
+    window.addEventListener('scroll', () => setScrolled(window.scrollY > 40));
+    return () => ws.close();
+  }, []);
+
+  return (
+    <div>
+      {/* Ticker */}
+      <div className="ticker-wrap">
+        <div className="ticker-track">
+          {[...TICKER, ...TICKER].map((t, i) => (
+            <div className="t-item" key={i}>
+              <span className="sym">{t.sym}</span>
+              <span>{t.sym === 'BTC/USDT' ? `$${btcPrice}` : `$${t.price}`}</span>
+              <span className={t.up ? 'up' : 'dn'}>{t.sym === 'BTC/USDT' ? btcChange : t.chg}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Navbar */}
+      <nav className={scrolled ? 'scrolled' : ''}>
+        <div className="nav-logo">AIFREEDOM <span style={{ color: 'white' }}>ULTRAX</span></div>
+        <div className="nav-right">
+          <button className="btn-nav-ghost">Sign In</button>
+          <button className="btn-nav-primary">Get Access</button>
+        </div>
+      </nav>
+
+      {/* Hero & Terminal */}
+      <div className="hero">
+        <div className="hero-left">
+          <h1>TRADE WITH <br/><span className="line-g">MACHINE</span> <span className="line-acc">INTELLIGENCE</span></h1>
+          <p className="hero-desc">Your ultimate AI companion for XAUUSD, BTC, and ETH scalping.</p>
+          <div className="hero-actions">
+            <button className="btn-hero primary">Start Trading Now →</button>
+          </div>
+        </div>
+
+        <div className="terminal-wrap">
+          <div className="terminal">
+            <div className="term-bar">
+              <div className="tdot tdot-r"/><div className="tdot tdot-y"/><div className="tdot tdot-g"/>
+              <span className="term-title">ULTRAX LIVE TERMINAL</span>
+            </div>
+            <div className="term-body">
+              <div className="ch-header">
+                <div>
+                  <div className="ch-sym">BTC / USDT</div>
+                  <div className="ch-price">${btcPrice}</div>
+                </div>
+                <div className="ch-change">{btcChange}</div>
+              </div>
+
+              <div className="term-tabs">
+                {['chart', 'book'].map(tab => (
+                  <button key={tab} className={`term-tab${activeTab === tab ? ' active' : ''}`} onClick={() => setActiveTab(tab)}>
+                    {tab.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+
+              {activeTab === 'chart' ? <TradingViewChart /> : (
+                <div className="ob-row bid" style={{padding:'20px', textAlign:'center'}}>
+                   Order Book Data Syncing...
+                </div>
+              )}
+
+              <div className="signal-box">
+                <div className="sdot" />
+                <div className="stext">
+                  <strong>AI ALERT:</strong> LONG position detected on BTC/USDT. Confidence: 94%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="section">
+        <div className="feat-grid">
+          {FEATURES.map((f, i) => (
+            <div className="feat-card" key={i}>
+              <div className="feat-icon">{f.icon}</div>
+              <div className="feat-name">{f.name}</div>
+              <div className="feat-desc">{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer>
+        <div className="foot-bottom">
+          <p>© 2026 AIFreedom UltraX. Built for elite traders.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+   
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
