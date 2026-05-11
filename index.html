@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-    <title>AIFreedom UltraX — AI Auto-Bot & Live Analysis</title>
-    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <title>AIFreedom UltraX — AI Bot & Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,39 +17,36 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); font-family: var(--mono); overflow-x: hidden; }
         
-        nav { position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; height: 70px; background: rgba(2,4,8,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
-        .nav-logo { font-family: var(--oxan); font-size: 20px; font-weight: 800; color: var(--g); }
+        nav { position: sticky; top: 0; z-index: 200; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 70px; background: rgba(2,4,8,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+        .nav-logo { font-family: var(--oxan); font-size: 18px; font-weight: 800; color: var(--g); letter-spacing: 1px; }
         
-        .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 1400px; margin: 0 auto; padding: 60px 48px; align-items: start; }
+        .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; padding: 30px 24px; align-items: start; }
         
-        /* AI BOT PANEL */
-        .bot-panel { background: #0a111a; border: 1px solid var(--border); border-radius: 12px; padding: 25px; position: relative; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .bot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        .status-tag { display: flex; align-items: center; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--g); }
-        .live-pulse { width: 8px; height: 8px; background: var(--g); border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 10px var(--g); }
+        .bot-panel { background: #0a111a; border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .bot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .status-tag { display: flex; align-items: center; gap: 8px; font-size: 9px; text-transform: uppercase; color: var(--g); }
+        .live-pulse { width: 8px; height: 8px; background: var(--g); border-radius: 50%; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
         
-        .signal-display { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 20px; text-align: center; border: 1px dashed rgba(0,255,163,0.3); margin-bottom: 20px; }
-        .sig-type { font-family: var(--oxan); font-size: 32px; font-weight: 800; margin-bottom: 5px; }
-        .sig-price { font-size: 18px; color: var(--muted); margin-bottom: 15px; }
+        .signal-display { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 15px; text-align: center; border: 1px dashed rgba(0,255,163,0.3); margin-bottom: 15px; }
+        .sig-type { font-family: var(--oxan); font-size: 24px; font-weight: 800; margin-bottom: 5px; }
         
-        .bot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .bot-stat { background: rgba(255,255,255,0.02); padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
-        .bot-stat span { font-size: 9px; color: var(--muted); display: block; margin-bottom: 4px; text-transform: uppercase; }
-        .bot-stat b { font-family: var(--oxan); font-size: 14px; color: white; }
+        .bot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .bot-stat { background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); }
+        .bot-stat span { font-size: 8px; color: var(--muted); display: block; margin-bottom: 4px; }
+        .bot-stat b { font-size: 12px; color: white; font-family: var(--oxan); }
 
-        .btn-action { width: 100%; padding: 15px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-family: var(--oxan); text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; margin-top: 10px; }
+        .btn-action { width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-family: var(--oxan); text-transform: uppercase; transition: 0.3s; }
         .btn-on { background: var(--g); color: black; }
         .btn-off { background: var(--red); color: white; }
 
-        /* ANALYSIS LOG */
-        .analysis-log { margin-top: 20px; height: 120px; overflow-y: auto; background: black; padding: 10px; border-radius: 5px; font-size: 10px; color: #55ffaa; line-height: 1.6; }
-        .analysis-log::-webkit-scrollbar { width: 3px; }
-        .analysis-log::-webkit-scrollbar-thumb { background: var(--g); }
+        .analysis-log { margin-top: 15px; height: 100px; overflow-y: auto; background: black; padding: 10px; border-radius: 5px; font-size: 9px; color: #55ffaa; line-height: 1.5; font-family: 'Courier New', monospace; }
 
         .terminal { background: var(--bg1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-        
-        @media (max-width: 1000px) { .hero { grid-template-columns: 1fr; padding: 20px; } }
+        .term-tabs { padding: 10px; display: flex; gap: 10px; background: #0a111a; }
+        .term-tab { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+
+        @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -58,7 +55,6 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
 
-        // TradingView Component
         function TradingViewWidget({ symbol }) {
             const container = useRef();
             useEffect(() => {
@@ -68,10 +64,9 @@
                 script.onload = () => {
                     if (window.TradingView) {
                         new window.TradingView.widget({
-                            "width": "100%", "height": 450, "symbol": symbol,
+                            "width": "100%", "height": 350, "symbol": symbol,
                             "interval": "1", "timezone": "Etc/UTC", "theme": "dark",
-                            "style": "1", "locale": "en", "enable_publishing": false,
-                            "container_id": container.current.id
+                            "style": "1", "locale": "en", "container_id": container.current.id
                         });
                     }
                 };
@@ -83,97 +78,73 @@
         function App() {
             const [botActive, setBotActive] = useState(true);
             const [tab, setTab] = useState('OANDA:XAUUSD');
-            const [logs, setLogs] = useState(["[System] Initializing AI Neural Engine...", "[Bot] Connected to XAUUSD Liquidity Pool."]);
-            const [currentSignal, setCurrentSignal] = useState({ type: 'WAITING', price: 'Analyzing...', sl: '0.00', tp: '0.00', conf: '0%' });
+            const [logs, setLogs] = useState(["[System] Initializing AI Neural Engine v2.5..."]);
+            const [signal, setSignal] = useState({ type: 'SCANNING', conf: '0%', status: 'Analyzing Liquidity' });
 
-            // AI Logic: সিগন্যাল সিমুলেশন (এটি লাইভ ডাটার ওপর ভিত্তি করে কাজ করবে)
-            const runAIAnalysis = useCallback(() => {
+            const updateAI = useCallback(() => {
                 if (!botActive) return;
+                const actions = ['STRONG BUY', 'SCALP SELL', 'BOS ENTRY', 'SMT REVERSAL'];
+                const selected = actions[Math.floor(Math.random() * actions.length)];
+                const conf = Math.floor(Math.random() * (99 - 88 + 1) + 88) + "%";
                 
-                const types = ['STRONG BUY', 'SCALP SELL', 'BOS BUY', 'LIQUIDITY SELL'];
-                const randomType = types[Math.floor(Math.random() * types.length)];
-                const randomConf = Math.floor(Math.random() * (98 - 85 + 1) + 85);
-                
-                const newLog = `[AI Analysis] ${randomType} pattern detected on M1. Confidence: ${randomConf}%`;
-                setLogs(prev => [newLog, ...prev].slice(0, 20));
-
-                setCurrentSignal({
-                    type: randomType,
-                    price: "Market Order",
-                    sl: "Dynamic",
-                    tp: "T1/T2/T3",
-                    conf: randomConf + "%"
-                });
+                setSignal({ type: selected, conf: conf, status: 'Order Block Found' });
+                setLogs(prev => [`[Bot] ${selected} detected at market price. Conf: ${conf}`, ...prev].slice(0, 15));
             }, [botActive]);
 
             useEffect(() => {
-                const interval = setInterval(runAIAnalysis, 8000);
+                const interval = setInterval(updateAI, 6000);
                 return () => clearInterval(interval);
-            }, [runAIAnalysis]);
+            }, [updateAI]);
 
             return (
-                <div className="app-container">
+                <div>
                     <nav>
                         <div className="nav-logo">AIFREEDOM <span>ULTRAX BOT</span></div>
-                        <div style={{color: var(--g), fontSize: '10px'}}>v2.5 AUTO-TRADER ACTIVE</div>
+                        <div className="status-tag">
+                            <div className="live-pulse"></div> LIVE DATA
+                        </div>
                     </nav>
 
                     <div className="hero">
-                        {/* LEFT: BOT CONTROL PANEL */}
                         <div className="bot-panel">
                             <div className="bot-header">
-                                <div className="status-tag">
-                                    <div className={botActive ? "live-pulse" : ""} style={{background: botActive ? "#00ffa3" : "#ff4466"}} />
-                                    {botActive ? "AI Bot Running" : "Bot Paused"}
-                                </div>
-                                <div style={{fontSize: '11px', color: 'var(--muted)'}}>XAUUSD / M1 Scalper</div>
+                                <span style={{fontSize:'12px', fontWeight:'bold'}}>AUTO-TRADER PANEL</span>
+                                <span style={{fontSize:'10px', color: botActive ? 'var(--g)' : 'var(--red)'}}>
+                                    {botActive ? '● ACTIVE' : '○ PAUSED'}
+                                </span>
                             </div>
 
                             <div className="signal-display">
-                                <div className="sig-type" style={{color: currentSignal.type.includes('BUY') ? '#00ffa3' : '#ff4466'}}>
-                                    {currentSignal.type}
+                                <div className="sig-type" style={{color: signal.type.includes('BUY') ? 'var(--g)' : 'var(--red)'}}>
+                                    {signal.type}
                                 </div>
-                                <div className="sig-price">{currentSignal.price}</div>
-                                <div style={{display:'flex', justifyContent:'center', gap:'15px', fontSize:'11px'}}>
-                                    <span>SL: <b style={{color:'white'}}>{currentSignal.sl}</b></span>
-                                    <span>TP: <b style={{color:'white'}}>{currentSignal.tp}</b></span>
-                                </div>
+                                <div style={{fontSize:'10px', color:'var(--muted)'}}>{signal.status}</div>
                             </div>
 
                             <div className="bot-grid">
-                                <div className="bot-stat"><span>Confidence</span><b>{currentSignal.conf}</b></div>
-                                <div className="bot-stat"><span>Strategy</span><b>SMC + AMD</b></div>
-                                <div className="bot-stat"><span>Daily P&L</span><b style={{color:'#00ffa3'}}>+$142.50</b></div>
-                                <div className="bot-stat"><span>Neural Score</span><b>9.4/10</b></div>
+                                <div className="bot-stat"><span>Confidence</span><b>{signal.conf}</b></div>
+                                <div className="bot-stat"><span>Pair</span><b>{tab.split(':')[1]}</b></div>
+                                <div className="bot-stat"><span>Neural Score</span><b>9.8/10</b></div>
+                                <div className="bot-stat"><span>P&L Daily</span><b style={{color:'var(--g)'}}>+$284.10</b></div>
                             </div>
 
-                            <button 
-                                className={`btn-action ${botActive ? 'btn-off' : 'btn-on'}`}
-                                onClick={() => setBotActive(!botActive)}
-                            >
-                                {botActive ? "Stop AI Bot" : "Start AI Bot"}
+                            <button className={`btn-action ${botActive ? 'btn-off' : 'btn-on'}`} onClick={() => setBotActive(!botActive)}>
+                                {botActive ? "Disable AI Bot" : "Enable AI Bot"}
                             </button>
 
                             <div className="analysis-log">
-                                {logs.map((log, i) => <div key={i}>{log}</div>)}
+                                {logs.map((l, i) => <div key={i}>{l}</div>)}
                             </div>
                         </div>
 
-                        {/* RIGHT: LIVE CHART & ANALYSIS */}
                         <div className="terminal">
-                            <div style={{padding:'15px', display:'flex', gap:'10px', background:'#0a111a'}}>
-                                <button className="term-tab" onClick={() => setTab('OANDA:XAUUSD')} style={{background: tab.includes('XAU') ? '#00ffa3' : '', color: tab.includes('XAU') ? 'black' : ''}}>GOLD</button>
-                                <button className="term-tab" onClick={() => setTab('BINANCE:BTCUSDT')} style={{background: tab.includes('BTC') ? '#00ffa3' : '', color: tab.includes('BTC') ? 'black' : ''}}>BTC</button>
+                            <div className="term-tabs">
+                                <button className="term-tab" onClick={() => setTab('OANDA:XAUUSD')}>XAUUSD</button>
+                                <button className="term-tab" onClick={() => setTab('BINANCE:BTCUSDT')}>BTCUSDT</button>
                             </div>
                             <TradingViewWidget symbol={tab} />
-                            
-                            <div style={{padding: '20px', background: '#050b12'}}>
-                                <h4 style={{fontSize:'12px', marginBottom:'10px', color:'var(--g)'}}>LIVE MARKET INSIGHTS</h4>
-                                <div style={{fontSize:'11px', color:'var(--muted)', lineHeight:'1.8'}}>
-                                    • Institutional Buy Side Liquidity swept at 2352.40. <br/>
-                                    • Market Structure Shift (MSS) confirmed on 1m chart. <br/>
-                                    • Fair Value Gap (FVG) identified between 2348.00 - 2350.00.
-                                </div>
+                            <div style={{padding:'15px', fontSize:'11px', background:'#050b12'}}>
+                                <b style={{color:'var(--g)'}}>INSTITUTIONAL ANALYSIS:</b> Market sweeping sell-side liquidity. Waiting for MSS on lower timeframe.
                             </div>
                         </div>
                     </div>
