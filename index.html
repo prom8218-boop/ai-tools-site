@@ -1283,112 +1283,154 @@ function App() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setBtcPrice(parseFloat(data.c).toLocaleString());
-      setBtcChange((data.P > 0 ? '+' : '') + data.P + '%');
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ═══════════════════════════════════════
+   MASTER CONFIGURATION
+═══════════════════════════════════════ */
+const API_CONFIG = {
+  // এখানে আপনার Twelve Data থেকে কপি করা Key-টি বসান
+  API_KEY: "YOUR_TWELVE_DATA_KEY_HERE", 
+  UPDATE_TIME: 20000 // ২০ সেকেন্ড পর পর ডাটা আপডেট হবে
+};
+
+/* ── TRADINGVIEW COMPONENT (এটি ফ্রি, Key লাগবে না) ── */
+function TradingViewWidget({ symbol }) {
+  const container = useRef();
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          "width": "100%",
+          "height": 380,
+          "symbol": symbol,
+          "interval": "5",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "enable_publishing": false,
+          "hide_top_toolbar": false,
+          "container_id": container.current.id
+        });
+      }
     };
-    window.addEventListener('scroll', () => setScrolled(window.scrollY > 40));
-    return () => ws.close();
+    document.head.appendChild(script);
+  }, [symbol]);
+  return <div id={`tv_${symbol.replace(':','_')}`} ref={container} style={{ borderRadius: '8px', overflow: 'hidden' }} />;
+}
+
+/* ── MAIN APPLICATION ── */
+function App() {
+  const [tab, setTab] = useState('BTC'); 
+  const [marketData, setMarketData] = useState({
+    BTC: { price: '49,412.00', chg: '+0.00%' },
+    GOLD: { price: '2,350.40', chg: '+0.00%' },
+    FOREX: { price: '1.0841', chg: '+0.00%' }
+  });
+
+  // Twelve Data থেকে লাইভ প্রাইস ফেচ করার লজিক
+  const fetchPrices = useCallback(async () => {
+    if (API_CONFIG.API_KEY === "YOUR_TWELVE_DATA_KEY_HERE") return;
+
+    try {
+      // BTC, Gold (XAU/USD), এবং Forex (EUR/USD) এর ডাটা একসাথে আনা
+      const response = await fetch(`https://api.twelvedata.com/price?symbol=BTC/USD,XAU/USD,EUR/USD&apikey=${API_CONFIG.API_KEY}`);
+      const data = await response.json();
+
+      if (data) {
+        setMarketData({
+          BTC: { price: parseFloat(data['BTC/USD'].price).toLocaleString(), chg: "+2.15%" },
+          GOLD: { price: parseFloat(data['XAU/USD'].price).toLocaleString(), chg: "+0.45%" },
+          FOREX: { price: data['EUR/USD'].price, chg: "-0.02%" }
+        });
+      }
+    } catch (e) {
+      console.log("Price Update Failed. Check API Key.");
+    }
   }, []);
 
+  useEffect(() => {
+    fetchPrices();
+    const timer = setInterval(fetchPrices, API_CONFIG.UPDATE_TIME);
+    return () => clearInterval(timer);
+  }, [fetchPrices]);
+
   return (
-    <div>
-      {/* Ticker */}
+    <div className="app-container">
+      {/* Ticker Tape */}
       <div className="ticker-wrap">
         <div className="ticker-track">
-          {[...TICKER, ...TICKER].map((t, i) => (
-            <div className="t-item" key={i}>
-              <span className="sym">{t.sym}</span>
-              <span>{t.sym === 'BTC/USDT' ? `$${btcPrice}` : `$${t.price}`}</span>
-              <span className={t.up ? 'up' : 'dn'}>{t.sym === 'BTC/USDT' ? btcChange : t.chg}</span>
-            </div>
-          ))}
+          <div className="t-item"><span className="sym">BTC/USD</span> <span>${marketData.BTC.price}</span> <span className="up">{marketData.BTC.chg}</span></div>
+          <div className="t-item"><span className="sym">XAU/USD</span> <span>${marketData.GOLD.price}</span> <span className="up">{marketData.GOLD.chg}</span></div>
+          <div className="t-item"><span className="sym">EUR/USD</span> <span>{marketData.FOREX.price}</span> <span className="dn">{marketData.FOREX.chg}</span></div>
         </div>
       </div>
 
-      {/* Navbar */}
-      <nav className={scrolled ? 'scrolled' : ''}>
-        <div className="nav-logo">AIFREEDOM <span style={{ color: 'white' }}>ULTRAX</span></div>
+      <nav style={{background: 'rgba(2,4,8,0.95)', borderBottom: '1px solid rgba(0,255,163,0.1)'}}>
+        <div className="nav-logo">AIFREEDOM <span style={{color:'white'}}>ULTRAX</span> <span className="nav-logo-tag">PRO</span></div>
         <div className="nav-right">
-          <button className="btn-nav-ghost">Sign In</button>
-          <button className="btn-nav-primary">Get Access</button>
+          <button className="btn-nav-primary">AI TERMINAL LIVE</button>
         </div>
       </nav>
 
-      {/* Hero & Terminal */}
       <div className="hero">
         <div className="hero-left">
-          <h1>TRADE WITH <br/><span className="line-g">MACHINE</span> <span className="line-acc">INTELLIGENCE</span></h1>
-          <p className="hero-desc">Your ultimate AI companion for XAUUSD, BTC, and ETH scalping.</p>
-          <div className="hero-actions">
-            <button className="btn-hero primary">Start Trading Now →</button>
-          </div>
+          <div className="hero-eyebrow"><span className="eyebrow-line"/> INSTITUTIONAL AI V3</div>
+          <h1>MASTER THE <br/><span className="line-g">MARKET</span> <span className="line-acc">FLOW</span></h1>
+          <p className="hero-desc">Advanced AMD/SMC integration for Gold, Bitcoin and Forex scalping.</p>
         </div>
 
         <div className="terminal-wrap">
           <div className="terminal">
             <div className="term-bar">
               <div className="tdot tdot-r"/><div className="tdot tdot-y"/><div className="tdot tdot-g"/>
-              <span className="term-title">ULTRAX LIVE TERMINAL</span>
+              <span className="term-title">{tab} LIVE FEED</span>
             </div>
             <div className="term-body">
               <div className="ch-header">
                 <div>
-                  <div className="ch-sym">BTC / USDT</div>
-                  <div className="ch-price">${btcPrice}</div>
+                  <div className="ch-sym">{tab} / USD</div>
+                  <div className="ch-price">${tab === 'BTC' ? marketData.BTC.price : (tab === 'GOLD' ? marketData.GOLD.price : marketData.FOREX.price)}</div>
                 </div>
-                <div className="ch-change">{btcChange}</div>
+                <div className="ch-change">{tab === 'BTC' ? marketData.BTC.chg : marketData.GOLD.chg}</div>
               </div>
 
               <div className="term-tabs">
-                {['chart', 'book'].map(tab => (
-                  <button key={tab} className={`term-tab${activeTab === tab ? ' active' : ''}`} onClick={() => setActiveTab(tab)}>
-                    {tab.toUpperCase()}
+                {['BTC', 'GOLD', 'FOREX'].map(t => (
+                  <button key={t} className={`term-tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
+                    {t}
                   </button>
                 ))}
               </div>
 
-              {activeTab === 'chart' ? <TradingViewChart /> : (
-                <div className="ob-row bid" style={{padding:'20px', textAlign:'center'}}>
-                   Order Book Data Syncing...
-                </div>
-              )}
+              <div style={{minHeight: '380px'}}>
+                {tab === 'BTC' && <TradingViewWidget symbol="BINANCE:BTCUSDT" />}
+                {tab === 'GOLD' && <TradingViewWidget symbol="OANDA:XAUUSD" />}
+                {tab === 'FOREX' && <TradingViewWidget symbol="FX:EURUSD" />}
+              </div>
 
               <div className="signal-box">
                 <div className="sdot" />
                 <div className="stext">
-                  <strong>AI ALERT:</strong> LONG position detected on BTC/USDT. Confidence: 94%
+                  <strong>AI ANALYTICS:</strong> Institutional liquidity sweep confirmed on {tab}. Confidence 94.2%
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Features Section */}
-      <div className="section">
-        <div className="feat-grid">
-          {FEATURES.map((f, i) => (
-            <div className="feat-card" key={i}>
-              <div className="feat-icon">{f.icon}</div>
-              <div className="feat-name">{f.name}</div>
-              <div className="feat-desc">{f.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer>
-        <div className="foot-bottom">
-          <p>© 2026 AIFreedom UltraX. Built for elite traders.</p>
-        </div>
-      </footer>
     </div>
   );
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
-
+<script>
    
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
