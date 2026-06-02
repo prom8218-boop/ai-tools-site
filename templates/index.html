@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALTools.in | World's Best AI & Code Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white font-sans antialiased">
+
+    <nav class="p-5 glass sticky top-0 z-50 flex justify-between items-center px-10">
+        <h1 class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+            ALTOOLS.IN
+        </h1>
+        <div class="space-x-6">
+            <a href="#ai-zone" class="hover:text-cyan-400 transition">AI Zone</a>
+            <a href="#compiler" class="hover:text-fuchsia-400 transition">Multi-Compiler</a>
+            <button class="bg-gradient-to-r from-cyan-500 to-fuchsia-500 px-4 py-2 rounded-full text-sm font-bold shadow-lg shadow-cyan-500/20">Get Premium</button>
+        </div>
+    </nav>
+
+    <header class="text-center py-20 px-5">
+        <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
+            The Ultimate <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">AI & Developer</span> Hub
+        </h2>
+        <p class="text-gray-400 max-w-2xl mx-auto text-lg mb-8">
+            Empower your workflow with Next-Gen Artificial Intelligence and an instant multi-language code execution engine.
+        </p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-5 grid grid-cols-1 lg:grid-cols-2 gap-10 pb-20">
+        
+        <section id="ai-zone" class="glass p-8 rounded-3xl shadow-2xl">
+            <h3 class="text-2xl font-bold mb-4 text-cyan-400 flex items-center gap-2">
+                🤖 AI Smart Assistant
+            </h3>
+            <div class="mb-4 h-60 overflow-y-auto bg-gray-900/50 p-4 rounded-xl border border-gray-800" id="ai-chat-box">
+                <p class="text-gray-500 italic">AI: Hello! How can I help you program or generate tools today?</p>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="ai-input" placeholder="Ask AI to write code or analyze..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500">
+                <button onclick="askAI()" class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-xl font-bold transition">Ask</button>
+            </div>
+        </section>
+
+        <section id="compiler" class="glass p-8 rounded-3xl shadow-2xl">
+            <h3 class="text-2xl font-bold mb-4 text-fuchsia-400">
+                💻 Universal IDE (Java, Python, C, C++)
+            </h3>
+            <div class="mb-4">
+                <label class="block text-sm text-gray-400 mb-2">Select Language:</label>
+                <select id="language" class="bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-white w-full focus:outline-none">
+                    <option value="python">Python 3</option>
+                    <option value="java">Java 17</option>
+                    <option value="cpp">C++ (GCC)</option>
+                    <option value="c">C (GCC)</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <textarea id="code-editor" rows="8" class="w-full font-mono bg-gray-900 border border-gray-700 rounded-xl p-4 text-emerald-400 focus:outline-none focus:border-fuchsia-500" placeholder="# Write your code here..."></textarea>
+            </div>
+            <button onclick="runCode()" class="w-full bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:opacity-90 py-3 rounded-xl font-bold transition shadow-lg shadow-fuchsia-500/20">
+                Execute Code Live
+            </button>
+            <div class="mt-6">
+                <h4 class="text-sm font-semibold text-gray-400 mb-2">Console Output:</h4>
+                <pre id="output" class="bg-black p-4 rounded-xl border border-gray-800 font-mono text-sm text-gray-300 min-h-[80px] overflow-x-auto"></pre>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
