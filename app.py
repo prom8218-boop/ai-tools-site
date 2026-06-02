@@ -5,7 +5,7 @@ import base64
 import requests
 
 # Root layout tracking definition
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 
 # System environments mapping extraction
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
