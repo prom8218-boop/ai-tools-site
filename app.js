@@ -8,7 +8,7 @@ async function askAI() {
     document.getElementById('ai-input').value = '';
 
     try {
-        const response = await fetch('/api/ai', {
+        const response = await fetch('./api/ai', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt: input })
@@ -30,7 +30,7 @@ async function runCode() {
     outputConsole.innerText = "Compiling and executing...";
 
     try {
-        const response = await fetch('/api/execute', {
+      const response = await fetch('./api/execute', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ language: lang, code: code })
