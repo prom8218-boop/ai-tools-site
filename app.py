@@ -2,36 +2,40 @@ from flask import Flask, request, jsonify, render_template
 import subprocess
 import os
 import base64
-from google import genai
-from google.genai import types
+import requests
 
-# Flask routing setup matching template directory architecture root context
+# Root layout tracking definition
 app = Flask(__name__, template_folder='.')
 
-os.environ["GEMINI_API_KEY"] = os.environ.get("GEMINI_API_KEY")
-client = genai.Client()
+# System environments mapping extraction
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# 🤖 AI TEXT RESPONSE GATEWAY
+# 🤖 1. CHAT TEXT COGNITIVE MODULE (Using direct native HTTP requests to bypass SDK Pillow crash)
 @app.route('/api/ai', methods=['POST'])
 def ai_assistant():
-    data = request.json
+    data = request.get_json(silent=True) or {}
     user_prompt = data.get('prompt', '')
     if not user_prompt:
-        return jsonify({"result": "Null token vector."})
+        return jsonify({"result": "Null token string."})
+        
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=user_prompt,
-        )
-        return jsonify({"result": response.text})
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {"contents": [{"parts": [{"text": user_prompt}]}]}
+        
+        response = requests.post(url, json=payload, headers=headers)
+        res_data = response.json()
+        
+        reply = res_data['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({"result": reply})
     except Exception as e:
-        return jsonify({"result": f"Cognitive Core Error: {str(e)}"})
+        return jsonify({"result": f"Cognitive Framework Exception Error: {str(e)}"})
 
-# 🎨 HIGH-PROFILE IMAGEN 3 LIVE GRAPHICS STUDIO 
+# 🎨 2. PREMIUM IMAGEN 3 GRAPHICS STUDIO (Bypassing SDK constraints via standard HTTP pipeline)
 @app.route('/api/generate-image', methods=['POST', 'HEAD'])
 def generate_image():
     if request.method == 'HEAD':
@@ -39,27 +43,32 @@ def generate_image():
         
     data = request.get_json(silent=True) or {}
     prompt = data.get('prompt', '')
+    if not prompt:
+        return jsonify({"error": "Empty tracking description token."}), 400
+        
     try:
-        result = client.models.generate_images(
-            model='imagen-3.0-generate-002',
-            prompt=prompt,
-            config=types.GenerateImagesConfig(
-                number_of_images=1,
-                output_mime_type="image/jpeg",
-                aspect_ratio="1:1"
-            )
-        )
-        generated_image = result.generated_images[0]
-        image_base64 = generated_image.image.image_bytes
-        encoded_image = base64.b64encode(image_base64).decode('utf-8')
-        return jsonify({"image_data": f"data:image/jpeg;base64,{encoded_image}"})
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key={GEMINI_API_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {
+            "prompt": prompt,
+            "numberOfImages": 1,
+            "outputMimeType": "image/jpeg",
+            "aspectRatio": "1:1"
+        }
+        
+        response = requests.post(url, json=payload, headers=headers)
+        res_data = response.json()
+        
+        # Standard dynamic base64 extraction routing map
+        base64_image_string = res_data['generatedImages'][0]['image']['imageBytes']
+        return jsonify({"image_data": f"data:image/jpeg;base64,{base64_image_string}"})
     except Exception as e:
-        return jsonify({"error": f"Imagen Render Collapse: {str(e)}"})
+        return jsonify({"error": f"Imagen Endpoint Core Communication Failure: {str(e)}"}), 500
 
-# 💻 UNIVERSAL CODE ISOLATION HOST ROUTING EXECUTION UNIT
+# 💻 3. UNIVERSAL COMPILE ENVIROMENTS (Python/Java/C/C++)
 @app.route('/api/execute', methods=['POST'])
 def execute_code():
-    data = request.json
+    data = request.get_json(silent=True) or {}
     lang = data.get('language')
     code = data.get('code')
     output = ""
@@ -86,9 +95,9 @@ def execute_code():
                 output = subprocess.run(['java', 'Main'], capture_output=True, text=True, timeout=5).stdout
             else: output = java_build.stderr
     except subprocess.TimeoutExpired:
-        output = "Error: Computation processing timed out limit matrix threshold."
+        output = "Error: Code compilation limits processing window (Max 5s)."
     except Exception as e:
-        output = f"Core Runtime Layer Error Matrix: {str(e)}"
+        output = f"Container Core System Crash Error: {str(e)}"
     return jsonify({"output": output})
 
 if __name__ == '__main__':
