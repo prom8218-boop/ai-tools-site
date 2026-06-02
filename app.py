@@ -32,12 +32,13 @@ def ai_assistant():
         return jsonify({"result": f"Cognitive Core Error: {str(e)}"})
 
 # 🎨 HIGH-PROFILE IMAGEN 3 LIVE GRAPHICS STUDIO 
-@app.route('/api/generate-image', methods=['POST'])
+@app.route('/api/generate-image', methods=['POST', 'HEAD'])
 def generate_image():
-    data = request.json
+    if request.method == 'HEAD':
+        return '', 200
+        
+    data = request.get_json(silent=True) or {}
     prompt = data.get('prompt', '')
-    if not prompt:
-        return jsonify({"error": "Empty description token."})
     try:
         result = client.models.generate_images(
             model='imagen-3.0-generate-002',
