@@ -11,15 +11,17 @@ from typing import Dict, List, Optional
 class LearningHub:
     """Provide educational content and code snippets"""
     
-    # Tutorial Content
+    # Tutorial Content Database
     TUTORIALS = {
         'python_basics': {
             'title': 'Python Basics',
-            'description': 'Learn Python fundamentals',
+            'description': 'Learn Python fundamentals from scratch',
+            'difficulty': 'beginner',
             'lessons': [
                 {
                     'id': 1,
                     'title': 'Variables and Data Types',
+                    'content': 'Learn about different data types in Python',
                     'code': '''# Variables
 name = "Alice"
 age = 25
@@ -28,105 +30,37 @@ is_student = True
 
 # Data Types
 print(type(name))      # <class 'str'>
-print(type(age))       # <class 'int'>
-print(type(height))    # <class 'float'>
-print(type(is_student)) # <class 'bool'>'''
+print(type(age))       # <class 'int'>'''
                 },
                 {
                     'id': 2,
                     'title': 'Functions',
-                    'code': '''# Function Definition
-def greet(name):
+                    'content': 'Create and use functions in Python',
+                    'code': '''def greet(name):
     return f"Hello, {name}!"
 
-# Function Call
-print(greet("Alice"))  # Output: Hello, Alice!
-
-# Function with Default Parameter
-def welcome(name="Guest"):
-    return f"Welcome, {name}!"
-
-print(welcome())       # Output: Welcome, Guest!
-print(welcome("Bob"))  # Output: Welcome, Bob!'''
-                },
-                {
-                    'id': 3,
-                    'title': 'Loops',
-                    'code': '''# For Loop
-for i in range(5):
-    print(f"Count: {i}")
-
-# While Loop
-count = 0
-while count < 3:
-    print(f"Count: {count}")
-    count += 1
-
-# List Iteration
-fruits = ["apple", "banana", "cherry"]
-for fruit in fruits:
-    print(fruit)'''
+print(greet("Alice"))'''
                 }
             ]
         },
-        'web_development': {
+        'web_basics': {
             'title': 'Web Development Basics',
             'description': 'Learn HTML, CSS, and JavaScript',
+            'difficulty': 'beginner',
             'lessons': [
                 {
                     'id': 1,
-                    'title': 'HTML Basics',
+                    'title': 'HTML Structure',
+                    'content': 'Basic HTML document structure',
                     'code': '''<!DOCTYPE html>
 <html>
 <head>
-    <title>My First Page</title>
+    <title>My Page</title>
 </head>
 <body>
-    <h1>Welcome to Web Development</h1>
-    <p>This is a paragraph.</p>
-    <a href="https://example.com">Click here</a>
+    <h1>Welcome</h1>
 </body>
 </html>'''
-                },
-                {
-                    'id': 2,
-                    'title': 'CSS Styling',
-                    'code': '''/* Selector */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-}
-
-/* Class */
-.header {
-    color: #333;
-    font-size: 24px;
-}
-
-/* ID */
-#main {
-    max-width: 1200px;
-    margin: 0 auto;
-}'''
-                },
-                {
-                    'id': 3,
-                    'title': 'JavaScript Events',
-                    'code': '''// Click Event
-document.getElementById("btn").addEventListener("click", function() {
-    alert("Button clicked!");
-});
-
-// Input Event
-document.getElementById("input").addEventListener("input", function(e) {
-    console.log(e.target.value);
-});
-
-// Form Submission
-document.getElementById("form").addEventListener("submit", function(e) {
-    e.preventDefault();
-    console.log("Form submitted");
-});'''
                 }
             ]
         }
@@ -139,6 +73,7 @@ document.getElementById("form").addEventListener("submit", function(e) {
                 'id': 'read_file',
                 'title': 'Read File',
                 'description': 'Read content from a file',
+                'tags': ['file', 'io'],
                 'code': '''with open('file.txt', 'r') as f:
     content = f.read()
     print(content)'''
@@ -147,28 +82,19 @@ document.getElementById("form").addEventListener("submit", function(e) {
                 'id': 'list_comprehension',
                 'title': 'List Comprehension',
                 'description': 'Create lists using comprehension',
-                'code': '''# Simple comprehension
-squares = [x**2 for x in range(10)]
-
-# With condition
-evens = [x for x in range(10) if x % 2 == 0]
-
-# Nested comprehension
-matrix = [[j for j in range(3)] for i in range(3)]'''
+                'tags': ['lists', 'python'],
+                'code': '''squares = [x**2 for x in range(10)]
+evens = [x for x in range(10) if x % 2 == 0]'''
             },
             {
                 'id': 'api_request',
                 'title': 'API Request',
-                'description': 'Make HTTP requests using requests library',
+                'description': 'Make HTTP requests',
+                'tags': ['api', 'requests'],
                 'code': '''import requests
-
-# GET request
 response = requests.get('https://api.example.com/data')
 data = response.json()
-
-# POST request
-payload = {'key': 'value'}
-response = requests.post('https://api.example.com/submit', json=payload)'''
+print(data)'''
             }
         ],
         'javascript': [
@@ -176,23 +102,17 @@ response = requests.post('https://api.example.com/submit', json=payload)'''
                 'id': 'fetch_api',
                 'title': 'Fetch API',
                 'description': 'Make HTTP requests in JavaScript',
-                'code': '''// GET request
-fetch('/api/data')
+                'tags': ['fetch', 'api'],
+                'code': '''fetch('/api/data')
     .then(response => response.json())
     .then(data => console.log(data))
-    .catch(error => console.error(error));
-
-// POST request
-fetch('/api/submit', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({key: 'value'})
-})'''
+    .catch(error => console.error(error));'''
             },
             {
                 'id': 'async_await',
                 'title': 'Async/Await',
                 'description': 'Handle asynchronous operations',
+                'tags': ['async', 'promises'],
                 'code': '''async function getData() {
     try {
         const response = await fetch('/api/data');
@@ -201,9 +121,7 @@ fetch('/api/submit', {
     } catch (error) {
         console.error('Error:', error);
     }
-}
-
-getData();'''
+}'''
             }
         ]
     }
@@ -213,11 +131,12 @@ getData();'''
         '/api/ai': {
             'method': 'POST',
             'description': 'Chat with AI Assistant',
+            'rate_limit': '30 requests/minute',
             'parameters': {
-                'prompt': 'str - Your question or prompt'
+                'prompt': {'type': 'string', 'required': True, 'description': 'Your question or prompt'}
             },
             'response': {
-                'result': 'str - AI response'
+                'result': {'type': 'string', 'description': 'AI response'}
             },
             'example': {
                 'request': {'prompt': 'What is Python?'},
@@ -227,45 +146,26 @@ getData();'''
         '/api/analyze-code': {
             'method': 'POST',
             'description': 'Analyze code for bugs and performance',
+            'rate_limit': '20 requests/minute',
             'parameters': {
-                'code': 'str - Code to analyze',
-                'language': 'str - Programming language'
+                'code': {'type': 'string', 'required': True, 'description': 'Code to analyze'},
+                'language': {'type': 'string', 'required': True, 'description': 'Programming language'}
             },
             'response': {
-                'overall_score': 'int - Code quality score (0-100)',
-                'bugs': 'dict - Bug detection results',
-                'performance': 'dict - Performance metrics'
-            },
-            'example': {
-                'request': {
-                    'code': 'def hello(): print("Hello")',
-                    'language': 'python'
-                },
-                'response': {
-                    'overall_score': 85,
-                    'bugs': {'total_bugs': 0},
-                    'performance': {'performance_score': 85}
-                }
+                'overall_score': {'type': 'integer', 'description': 'Code quality score (0-100)'},
+                'bugs': {'type': 'object', 'description': 'Bug detection results'}
             }
         },
         '/api/execute': {
             'method': 'POST',
             'description': 'Execute code and get output',
+            'rate_limit': '10 requests/minute',
             'parameters': {
-                'code': 'str - Code to execute',
-                'language': 'str - python|java|cpp|c'
+                'code': {'type': 'string', 'required': True},
+                'language': {'type': 'string', 'required': True, 'values': ['python', 'java', 'cpp', 'c']}
             },
             'response': {
-                'output': 'str - Code execution output'
-            },
-            'example': {
-                'request': {
-                    'code': 'print("Hello World")',
-                    'language': 'python'
-                },
-                'response': {
-                    'output': 'Hello World'
-                }
+                'output': {'type': 'string', 'description': 'Code execution output'}
             }
         }
     }
@@ -281,6 +181,7 @@ getData();'''
         
         return {
             'status': 'success',
+            'total_tutorials': len(self.TUTORIALS),
             'categories': list(self.TUTORIALS.keys()),
             'tutorials': self.TUTORIALS
         }
@@ -308,12 +209,14 @@ getData();'''
             return {
                 'status': 'success',
                 'language': language,
+                'count': len(self.CODE_SNIPPETS[language]),
                 'snippets': self.CODE_SNIPPETS[language]
             }
         
         return {
             'status': 'success',
             'languages': list(self.CODE_SNIPPETS.keys()),
+            'total_snippets': sum(len(s) for s in self.CODE_SNIPPETS.values()),
             'snippets': self.CODE_SNIPPETS
         }
     
@@ -343,18 +246,24 @@ getData();'''
         
         return {
             'status': 'success',
+            'total_endpoints': len(self.API_DOCS),
             'endpoints': list(self.API_DOCS.keys()),
             'documentation': self.API_DOCS
         }
     
     def search_snippets(self, query: str) -> Dict:
-        """Search code snippets"""
+        """Search code snippets by title or tag"""
         results = []
         
         for language, snippets in self.CODE_SNIPPETS.items():
             for snippet in snippets:
-                if (query.lower() in snippet['title'].lower() or
-                    query.lower() in snippet['description'].lower()):
+                search_fields = [
+                    snippet['title'],
+                    snippet['description'],
+                    ' '.join(snippet.get('tags', []))
+                ]
+                
+                if any(query.lower() in field.lower() for field in search_fields):
                     results.append({
                         'language': language,
                         **snippet
@@ -363,37 +272,27 @@ getData();'''
         return {
             'status': 'success',
             'query': query,
-            'results': results,
-            'count': len(results)
+            'results_count': len(results),
+            'results': results
         }
     
-    def generate_api_doc(self, code: str, language: str = 'python') -> Dict:
-        """Generate API documentation from code"""
-        
-        doc = {
-            'generated_at': datetime.now().isoformat(),
-            'language': language,
-            'endpoints': [],
-            'functions': [],
-            'classes': []
+    def get_learning_path(self, level: str = 'beginner') -> Dict:
+        """Get recommended learning path"""
+        paths = {
+            'beginner': {
+                'title': 'Beginner Learning Path',
+                'description': 'Start your programming journey',
+                'tutorials': ['python_basics', 'web_basics'],
+                'duration': '2-3 weeks',
+                'topics': ['Variables', 'Functions', 'Loops', 'HTML Basics']
+            },
+            'intermediate': {
+                'title': 'Intermediate Learning Path',
+                'description': 'Build on your programming skills',
+                'tutorials': [],
+                'duration': '4-6 weeks',
+                'topics': ['OOP', 'Database', 'APIs', 'Frameworks']
+            }
         }
         
-        if language == 'python':
-            # Extract functions
-            import re
-            functions = re.findall(r'def\s+(\w+)\s*\([^)]*\):\s*"""([^"]*)"""', code)
-            for func_name, func_doc in functions:
-                doc['functions'].append({
-                    'name': func_name,
-                    'description': func_doc.strip()
-                })
-            
-            # Extract classes
-            classes = re.findall(r'class\s+(\w+)', code)
-            for class_name in classes:
-                doc['classes'].append({'name': class_name})
-        
-        return {
-            'status': 'success',
-            'documentation': doc
-        }
+        return paths.get(level, paths['beginner'])
