@@ -11,11 +11,11 @@ from session_manager import SessionManager
 from rate_limiter import RateLimiter, SecurityManager, ErrorHandler
 from learning_hub import LearningHub
 
-# Initialize Flask app
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-12345")
 
-# Initialize modules
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
 analyzer = CodeAnalyzer()
 session_mgr = SessionManager()
 rate_limiter = RateLimiter()
@@ -23,322 +23,193 @@ security_mgr = SecurityManager()
 error_handler = ErrorHandler()
 learning_hub = LearningHub()
 
+def add_cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
+@app.after_request
+def after_request(response):
+    return add_cors(response)
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# ======================== AI & CODE FEATURES ========================
-
-# 🤖 1. CHAT TEXT COGNITIVE MODULE
-@app.route('/api/ai', methods=['POST'])
+@app.route('/api/ai', methods=['POST', 'OPTIONS'])
 def ai_assistant():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json(silent=True) or {}
     user_id = data.get('user_id', 'anonymous')
     user_prompt = data.get('prompt', '')
-    
-    # Security check
-    is_valid, msg = security_mgr.validate_input(user_prompt, 'prompt')
-    if not is_valid:
-        error_handler.log_error('security_error', msg, user_id, '/api/ai')
-        return jsonify({"error": msg}), 400
-    
-    # Rate limit check
-    allowed, limit_info = rate_limiter.check_rate_limit(user_id, 'ai_chat')
-    if not allowed:
-        return jsonify(limit_info), 429
-    
+
     if not user_prompt:
         return jsonify({"result": "Please provide a prompt."})
-        
+
+    if not GEMINI_API_KEY:
+        return jsonify({"result": "Error: GEMINI_API_KEY is not set on the server."})
+
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
         headers = {'Content-Type': 'application/json'}
         payload = {"contents": [{"parts": [{"text": user_prompt}]}]}
-        
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
         res_data = response.json()
-        
+
+        if 'candidates' not in res_data:
+            return jsonify({"result": f"API Error: {res_data.get('error', {}).get('message', 'Unknown error')}"}), 500
+
         reply = res_data['candidates'][0]['content']['parts'][0]['text']
-        
-        # Save to history
         session_mgr.save_chat_message(user_id, 'user', user_prompt)
         session_mgr.save_chat_message(user_id, 'ai', reply)
-        
-        return jsonify({"result": reply, "quota_info": limit_info})
+        return jsonify({"result": reply})
     except Exception as e:
-        error_handler.log_error('api_error', str(e), user_id, '/api/ai')
         return jsonify({"result": f"Error: {str(e)}"}), 500
 
-# 🎨 2. IMAGE GENERATION
-@app.route('/api/generate-image', methods=['POST', 'HEAD'])
+@app.route('/api/generate-image', methods=['POST', 'HEAD', 'OPTIONS'])
 def generate_image():
-    if request.method == 'HEAD':
+    if request.method in ['HEAD', 'OPTIONS']:
         return '', 200
-        
     data = request.get_json(silent=True) or {}
-    user_id = data.get('user_id', 'anonymous')
     prompt = data.get('prompt', '')
-    
-    # Rate limit
-    allowed, limit_info = rate_limiter.check_rate_limit(user_id, 'image_generation')
-    if not allowed:
-        return jsonify(limit_info), 429
-    
+
     if not prompt:
         return jsonify({"error": "Please provide a prompt"}), 400
-        
+
+    if not GEMINI_API_KEY:
+        return jsonify({"error": "GEMINI_API_KEY not set"}), 500
+
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateImages?key={GEMINI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={GEMINI_API_KEY}"
         headers = {'Content-Type': 'application/json'}
         payload = {
-            "prompt": prompt,
-            "numberOfImages": 1,
-            "outputMimeType": "image/jpeg",
-            "aspectRatio": "1:1"
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}
         }
-        
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=60)
         res_data = response.json()
-        
-        base64_image_string = res_data['generatedImages'][0]['image']['imageBytes']
-        return jsonify({"image_data": f"data:image/jpeg;base64,{base64_image_string}"})
-    except Exception as e:
-        error_handler.log_error('api_error', str(e), user_id, '/api/generate-image')
-        return jsonify({"error": f"Error: {str(e)}"}), 500
 
-# 💻 3. CODE EXECUTION (Updated & Safer)
-@app.route('/api/execute', methods=['POST'])
+        if 'candidates' not in res_data:
+            return jsonify({"error": res_data.get('error', {}).get('message', 'Image generation failed')}), 500
+
+        for part in res_data['candidates'][0]['content']['parts']:
+            if 'inlineData' in part:
+                image_data = part['inlineData']['data']
+                mime_type = part['inlineData']['mimeType']
+                return jsonify({"image": f"data:{mime_type};base64,{image_data}"})
+
+        return jsonify({"error": "No image returned"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/algo', methods=['POST', 'OPTIONS'])
+def generate_algo():
+    if request.method == 'OPTIONS':
+        return '', 200
+    data = request.get_json(silent=True) or {}
+    strategy = data.get('prompt', data.get('strategy', ''))
+
+    if not strategy:
+        return jsonify({"result": "Please describe your trading strategy."})
+
+    if not GEMINI_API_KEY:
+        return jsonify({"result": "Error: GEMINI_API_KEY is not set."})
+
+    try:
+        prompt = f"Write a complete Pine Script v5 trading strategy for TradingView based on this idea: {strategy}. Include entry/exit conditions, stop loss, take profit, and proper comments."
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        res_data = response.json()
+
+        if 'candidates' not in res_data:
+            return jsonify({"result": f"API Error: {res_data.get('error', {}).get('message', 'Unknown')}"}), 500
+
+        reply = res_data['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({"result": reply})
+    except Exception as e:
+        return jsonify({"result": f"Error: {str(e)}"}), 500
+
+@app.route('/api/execute', methods=['POST', 'OPTIONS'])
 def execute_code():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json(silent=True) or {}
-    user_id = data.get('user_id', 'anonymous')
-    lang = data.get('language')
-    code = data.get('code')
-    
-    # Rate limit
-    allowed, limit_info = rate_limiter.check_rate_limit(user_id, 'code_execution')
-    if not allowed:
-        return jsonify(limit_info), 429
-    
-    # Security check
-    is_valid, msg = security_mgr.validate_input(code, 'code')
-    if not is_valid:
-        error_handler.log_error('security_error', msg, user_id, '/api/execute')
-        return jsonify({"error": msg}), 400
-    
-    output = ""
-    # প্রত্যেক রিকোয়েস্টের জন্য একটি আলাদা এবং ইউনিক ফোল্ডার তৈরি করা হচ্ছে
-    temp_dir = tempfile.mkdtemp(prefix=f"exec_{uuid.uuid4().hex[:8]}_")
-    
-    try:
-        if lang == 'python':
-            process = subprocess.run(['python3', '-c', code], capture_output=True, text=True, timeout=5, cwd=temp_dir)
-            output = process.stdout if process.returncode == 0 else process.stderr
-            
-        elif lang == 'c':
-            file_path = os.path.join(temp_dir, 'temp.c')
-            exe_path = os.path.join(temp_dir, 'temp_c')
-            with open(file_path, 'w') as f: f.write(code)
-            c_build = subprocess.run(['gcc', file_path, '-o', exe_path], capture_output=True, text=True)
-            if c_build.returncode == 0:
-                output = subprocess.run([exe_path], capture_output=True, text=True, timeout=5).stdout
-            else: output = c_build.stderr
-            
-        elif lang == 'cpp':
-            file_path = os.path.join(temp_dir, 'temp.cpp')
-            exe_path = os.path.join(temp_dir, 'temp_cpp')
-            with open(file_path, 'w') as f: f.write(code)
-            cpp_build = subprocess.run(['g++', file_path, '-o', exe_path], capture_output=True, text=True)
-            if cpp_build.returncode == 0:
-                output = subprocess.run([exe_path], capture_output=True, text=True, timeout=5).stdout
-            else: output = cpp_build.stderr
-            
-        elif lang == 'java':
-            file_path = os.path.join(temp_dir, 'Main.java')
-            with open(file_path, 'w') as f: f.write(code)
-            java_build = subprocess.run(['javac', file_path], capture_output=True, text=True, cwd=temp_dir)
-            if java_build.returncode == 0:
-                output = subprocess.run(['java', 'Main'], capture_output=True, text=True, timeout=5, cwd=temp_dir).stdout
-            else: output = java_build.stderr
-            
-    except subprocess.TimeoutExpired:
-        output = "Error: Code execution timed out (Max 5s)"
-        error_handler.log_error('timeout', 'Code execution timeout', user_id, '/api/execute')
-    except Exception as e:
-        output = f"Error: {str(e)}"
-        error_handler.log_error('execution_error', str(e), user_id, '/api/execute')
-    finally:
-        # কাজ শেষ হওয়ার পর ইউনিক ফোল্ডারটি মুছে ফেলা হচ্ছে
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        
-    return jsonify({"output": output})
+    code = data.get('code', '')
+    language = data.get('language', 'python')
 
-# 🔍 4. CODE ANALYSIS
-@app.route('/api/analyze-code', methods=['POST'])
+    if not code:
+        return jsonify({"output": "No code provided", "error": ""})
+
+    if language == 'python':
+        try:
+            result = subprocess.run(
+                ['python3', '-c', code],
+                capture_output=True, text=True, timeout=10
+            )
+            return jsonify({"output": result.stdout, "error": result.stderr})
+        except subprocess.TimeoutExpired:
+            return jsonify({"output": "", "error": "Timeout: Code took too long to execute"})
+        except Exception as e:
+            return jsonify({"output": "", "error": str(e)})
+    else:
+        return jsonify({"output": "", "error": f"Language '{language}' not supported yet"})
+
+@app.route('/api/analyze-code', methods=['POST', 'OPTIONS'])
 def analyze_code():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json(silent=True) or {}
-    user_id = data.get('user_id', 'anonymous')
     code = data.get('code', '')
     language = data.get('language', 'python')
-    
-    # Rate limit
-    allowed, limit_info = rate_limiter.check_rate_limit(user_id, 'code_analysis')
-    if not allowed:
-        return jsonify(limit_info), 429
-    
-    if not code or len(code.strip()) < 10:
-        return jsonify({"error": "Code is too short for analysis"}), 400
-    
-    try:
-        analysis = analyzer.full_analysis(code, language)
-        return jsonify({
-            "status": "success",
-            "analysis": {
-                "overall_score": analysis['overall_score'],
-                "bugs": analysis['bugs'],
-                "performance": analysis['performance'],
-                "refactoring_suggestions": analysis['refactoring_suggestions']
-            },
-            "quota_info": limit_info
-        })
-    except Exception as e:
-        error_handler.log_error('analysis_error', str(e), user_id, '/api/analyze-code')
-        return jsonify({"error": f"Analysis Failed: {str(e)}"}), 500
 
-@app.route('/api/detect-bugs', methods=['POST'])
-def detect_bugs():
-    data = request.get_json(silent=True) or {}
-    code = data.get('code', '')
-    language = data.get('language', 'python')
-    user_id = data.get('user_id', 'anonymous')
-    
     if not code:
         return jsonify({"error": "No code provided"}), 400
-    
-    try:
-        bugs = analyzer.detect_bugs(code, language)
-        return jsonify({"status": "success", "bugs": bugs})
-    except Exception as e:
-        error_handler.log_error('bug_detection_error', str(e), user_id, '/api/detect-bugs')
-        return jsonify({"error": str(e)}), 500
 
-@app.route('/api/performance-analysis', methods=['POST'])
-def performance_analysis():
-    data = request.get_json(silent=True) or {}
-    code = data.get('code', '')
-    language = data.get('language', 'python')
-    
-    if not code:
-        return jsonify({"error": "No code provided"}), 400
-    
     try:
-        metrics = analyzer.analyze_performance(code, language)
-        return jsonify({"status": "success", "metrics": metrics})
+        result = analyzer.detect_bugs(code, language)
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/refactoring-suggestions', methods=['POST'])
-def refactoring_suggestions():
+@app.route('/api/analyze-data', methods=['POST', 'OPTIONS'])
+def analyze_data():
+    if request.method == 'OPTIONS':
+        return '', 200
     data = request.get_json(silent=True) or {}
-    code = data.get('code', '')
-    language = data.get('language', 'python')
-    
-    if not code:
-        return jsonify({"error": "No code provided"}), 400
-    
+    csv_data = data.get('data', '')
+    question = data.get('question', 'Analyze this data and provide insights')
+
+    if not GEMINI_API_KEY:
+        return jsonify({"result": "Error: GEMINI_API_KEY not set"}), 500
+
     try:
-        suggestions = analyzer.suggest_refactoring(code, language)
-        return jsonify({"status": "success", "suggestions": suggestions})
+        prompt = f"Analyze this CSV data and answer: {question}\n\nData:\n{csv_data[:3000]}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        res_data = response.json()
+
+        if 'candidates' not in res_data:
+            return jsonify({"result": "Analysis failed"}), 500
+
+        reply = res_data['candidates'][0]['content']['parts'][0]['text']
+        return jsonify({"result": reply})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"result": f"Error: {str(e)}"}), 500
 
-# ======================== SESSION & HISTORY ========================
-
-@app.route('/api/chat-history', methods=['GET'])
-def get_chat_history():
-    user_id = request.args.get('user_id', 'anonymous')
-    history = session_mgr.get_chat_history(user_id)
-    return jsonify({"status": "success", "history": history})
-
-@app.route('/api/save-favorite', methods=['POST'])
-def save_favorite():
-    data = request.get_json(silent=True) or {}
-    user_id = data.get('user_id', 'anonymous')
-    prompt = data.get('prompt', '')
-    category = data.get('category', 'general')
-    
-    result = session_mgr.save_favorite(user_id, prompt, category)
-    return jsonify(result)
-
-@app.route('/api/get-favorites', methods=['GET'])
-def get_favorites():
-    user_id = request.args.get('user_id', 'anonymous')
-    favorites = session_mgr.get_favorites(user_id)
-    return jsonify({"status": "success", "favorites": favorites})
-
-@app.route('/api/export-session', methods=['GET'])
-def export_session():
-    user_id = request.args.get('user_id', 'anonymous')
-    format = request.args.get('format', 'json')  # json, csv
-    
-    if format == 'json':
-        data = session_mgr.export_session_json(user_id)
-        return jsonify(data)
-    elif format == 'csv':
-        csv_data = session_mgr.export_session_csv(user_id)
-        return csv_data, 200, {'Content-Type': 'text/csv'}
-    
-    return jsonify({"error": "Unsupported format"}), 400
-
-@app.route('/api/session-stats', methods=['GET'])
-def session_stats():
-    user_id = request.args.get('user_id', 'anonymous')
-    stats = session_mgr.get_session_stats(user_id)
-    return jsonify({"status": "success", "stats": stats})
-
-# ======================== LEARNING HUB ========================
-
-@app.route('/api/tutorials', methods=['GET'])
-def get_tutorials():
-    category = request.args.get('category')
-    tutorials = learning_hub.get_tutorials(category)
-    return jsonify(tutorials)
-
-@app.route('/api/code-snippets', methods=['GET'])
-def get_code_snippets():
-    language = request.args.get('language')
-    snippets = learning_hub.get_code_snippets(language)
-    return jsonify(snippets)
-
-@app.route('/api/search-snippets', methods=['GET'])
-def search_snippets():
-    query = request.args.get('query', '')
-    results = learning_hub.search_snippets(query)
-    return jsonify(results)
-
-@app.route('/api/api-docs', methods=['GET'])
-def get_api_docs():
-    endpoint = request.args.get('endpoint')
-    docs = learning_hub.get_api_docs(endpoint)
-    return jsonify(docs)
-
-# ======================== RATE LIMIT & QUOTA ========================
-
-@app.route('/api/user-quota', methods=['GET'])
-def user_quota():
-    user_id = request.args.get('user_id', 'anonymous')
-    endpoint = request.args.get('endpoint')
-    quota = rate_limiter.get_user_quota(user_id, endpoint)
-    return jsonify({"status": "success", "quota": quota})
-
-@app.route('/api/error-stats', methods=['GET'])
-def error_stats():
-    hours = request.args.get('hours', 24, type=int)
-    stats = error_handler.get_error_stats(hours)
-    return jsonify({"status": "success", "stats": stats})
-
-@app.route('/data-analyzer')
-def data_analyzer():
-    return render_template('data_analyzer.html')
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({
+        "status": "ok",
+        "api_key_set": bool(GEMINI_API_KEY),
+        "api_key_length": len(GEMINI_API_KEY) if GEMINI_API_KEY else 0
+    })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
