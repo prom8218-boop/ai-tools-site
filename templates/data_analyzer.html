@@ -1,104 +1,126 @@
-
-<h2 class="sr-only">AI Data Analyzer — upload a CSV file to get automated charts and AI-powered insights</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Data Analyzer</title>
 <style>
-.drop-zone{border:1.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:2.5rem 1rem;text-align:center;cursor:pointer;transition:background 0.18s;}
-.drop-zone:hover,.drop-zone.drag-over{background:var(--color-background-secondary);}
-.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:1.25rem 0;}
-.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.875rem 1rem;}
-.metric p{margin:0;}
-.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px!important;}
-.metric-value{font-size:22px;font-weight:500;color:var(--color-text-primary);}
-.col-tags{display:flex;flex-wrap:wrap;gap:6px;margin:.5rem 0 1.25rem;}
-.ctag{font-size:11px;padding:3px 10px;border-radius:100px;font-weight:500;}
-.ctag.num{background:var(--color-background-info);color:var(--color-text-info);}
-.ctag.txt{background:var(--color-background-secondary);color:var(--color-text-secondary);}
-.insight-box{border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);border-left:2.5px solid var(--color-border-info);padding:1rem 1.25rem;margin:1rem 0;}
-.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:1rem 0;}
-.chart-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:.875rem;}
-.chart-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin:0 0 10px;}
-.clegend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;}
-.clegend span{font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px;}
-.clegend b{width:9px;height:9px;border-radius:2px;display:inline-block;flex-shrink:0;}
-.spinner{width:14px;height:14px;border:2px solid var(--color-border-tertiary);border-top-color:var(--color-text-secondary);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--color-text-secondary);margin:1rem 0;}
-.divider{border:none;border-top:.5px solid var(--color-border-tertiary);margin:1.25rem 0;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+  .container { width: 100%; max-width: 860px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; color: #111; }
+  .sub { font-size: 14px; color: #666; margin-bottom: 1.5rem; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; padding: 1.25rem; margin-bottom: 1rem; }
+  .drop-zone { border: 2px dashed #d0d0d0; border-radius: 10px; padding: 3rem 1rem; text-align: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .drop-zone:hover, .drop-zone.drag-over { background: #f0f7ff; border-color: #378ADD; }
+  .drop-icon { font-size: 36px; margin-bottom: 10px; }
+  .drop-title { font-size: 16px; font-weight: 500; color: #222; margin-bottom: 4px; }
+  .drop-sub { font-size: 13px; color: #888; }
+  .sample-btn { background: none; border: 1px solid #ddd; border-radius: 8px; padding: 8px 16px; font-size: 13px; color: #555; cursor: pointer; margin-top: 12px; transition: background 0.15s; }
+  .sample-btn:hover { background: #f0f0f0; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .metric { background: #f8f8f8; border-radius: 8px; padding: .875rem 1rem; }
+  .m-label { font-size: 11px; color: #888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+  .m-value { font-size: 22px; font-weight: 600; color: #111; }
+  .col-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .ctag { font-size: 11px; padding: 3px 10px; border-radius: 100px; font-weight: 500; }
+  .ctag.num { background: #dbeafe; color: #1e40af; }
+  .ctag.txt { background: #f0f0f0; color: #555; }
+  .insight-box { border-radius: 10px; border: 1px solid #e5e5e5; border-left: 3px solid #378ADD; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+  .insight-label { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .insight-text { font-size: 14px; line-height: 1.75; color: #222; }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-bottom: 1rem; }
+  .chart-card { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: .875rem; }
+  .chart-title { font-size: 12px; font-weight: 500; color: #666; margin-bottom: 10px; }
+  .clegend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+  .clegend span { font-size: 11px; color: #666; display: flex; align-items: center; gap: 4px; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #ddd; border-top-color: #555; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #666; margin: .75rem 0; }
+  .reset-btn { background: none; border: 1px solid #ddd; border-radius: 8px; padding: 6px 14px; font-size: 12px; color: #555; cursor: pointer; }
+  .reset-btn:hover { background: #f5f5f5; }
+  .file-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .file-name { font-size: 14px; font-weight: 500; color: #111; }
+  .file-meta { font-size: 12px; color: #888; }
+  .err-text { font-size: 12px; color: #dc2626; }
+  @media (max-width: 600px) { .metric-grid { grid-template-columns: repeat(2,1fr); } }
 </style>
+</head>
+<body>
 
-<div style="padding:.75rem 0;">
+<div class="container">
+  <h1>🔍 AI Data Analyzer</h1>
+  <p class="sub">Upload a CSV file to get instant charts and AI-powered insights</p>
 
-<div id="upload-sec">
-  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-inp').click()">
-    <input type="file" id="csv-inp" accept=".csv" style="display:none">
-    <i class="ti ti-upload" style="font-size:28px;color:var(--color-text-tertiary);" aria-hidden="true"></i>
-    <p style="margin:10px 0 4px;font-size:15px;font-weight:500;color:var(--color-text-primary);">Drop your CSV here</p>
-    <p style="margin:0;font-size:13px;color:var(--color-text-secondary);">or click to browse</p>
-  </div>
-  <div style="text-align:center;margin-top:12px;">
-    <button onclick="loadSample()" style="font-size:13px;color:var(--color-text-secondary);">
-      <i class="ti ti-table" aria-hidden="true"></i> Try with sample data
-    </button>
-  </div>
-</div>
-
-<div id="result-sec" style="display:none;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-    <div>
-      <p style="margin:0;font-size:14px;font-weight:500;color:var(--color-text-primary);" id="fname"></p>
-      <p style="margin:2px 0 0;font-size:12px;color:var(--color-text-secondary);" id="fmeta"></p>
+  <!-- UPLOAD SECTION -->
+  <div class="card" id="upload-sec">
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-inp').click()">
+      <input type="file" id="csv-inp" accept=".csv" style="display:none">
+      <div class="drop-icon">📂</div>
+      <p class="drop-title">Drop your CSV here</p>
+      <p class="drop-sub">or click to browse — max 5MB</p>
     </div>
-    <button onclick="resetTool()" style="font-size:12px;"><i class="ti ti-refresh" aria-hidden="true"></i> New file</button>
+    <div style="text-align:center;margin-top:12px;">
+      <button class="sample-btn" onclick="loadSample()">📊 Try with sample data</button>
+    </div>
   </div>
 
-  <div class="metric-grid">
-    <div class="metric"><p class="metric-label">Rows</p><p class="metric-value" id="s-rows">—</p></div>
-    <div class="metric"><p class="metric-label">Columns</p><p class="metric-value" id="s-cols">—</p></div>
-    <div class="metric"><p class="metric-label">Numeric</p><p class="metric-value" id="s-num">—</p></div>
-    <div class="metric"><p class="metric-label">Missing</p><p class="metric-value" id="s-miss">—</p></div>
+  <!-- RESULTS SECTION -->
+  <div id="result-sec" style="display:none;">
+    <div class="card">
+      <div class="file-header">
+        <div>
+          <p class="file-name" id="fname"></p>
+          <p class="file-meta" id="fmeta"></p>
+        </div>
+        <button class="reset-btn" onclick="resetTool()">↺ New file</button>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric"><div class="m-label">Rows</div><div class="m-value" id="s-rows">—</div></div>
+        <div class="metric"><div class="m-label">Columns</div><div class="m-value" id="s-cols">—</div></div>
+        <div class="metric"><div class="m-label">Numeric</div><div class="m-value" id="s-num">—</div></div>
+        <div class="metric"><div class="m-label">Missing</div><div class="m-value" id="s-miss">—</div></div>
+      </div>
+
+      <div style="font-size:12px;color:#888;margin-bottom:6px;">Detected columns</div>
+      <div class="col-tags" id="col-tags"></div>
+    </div>
+
+    <div class="card">
+      <div class="loading-row" id="ai-load"><span class="spinner"></span><span>Generating AI insights…</span></div>
+      <div id="ai-box" style="display:none;">
+        <div class="insight-label">✨ AI Insights</div>
+        <div class="insight-text" id="ai-text"></div>
+      </div>
+      <div id="ai-err" class="err-text" style="display:none;"></div>
+    </div>
+
+    <div class="chart-grid" id="chart-grid"></div>
   </div>
-
-  <p style="font-size:12px;color:var(--color-text-secondary);margin:0 0 6px;">Detected columns</p>
-  <div class="col-tags" id="col-tags"></div>
-
-  <div class="loading-row" id="ai-load"><div class="spinner"></div><span>Generating AI insights…</span></div>
-  <div class="insight-box" id="ai-box" style="display:none;">
-    <p style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin:0 0 6px;">
-      <i class="ti ti-sparkles" style="font-size:13px;margin-right:3px;" aria-hidden="true"></i>AI insights
-    </p>
-    <p id="ai-text" style="margin:0;font-size:13px;line-height:1.75;color:var(--color-text-primary);"></p>
-  </div>
-  <div id="ai-err" style="display:none;font-size:12px;color:var(--color-text-danger);margin:.5rem 0;"></div>
-
-  <div class="chart-grid" id="chart-grid"></div>
-
-  <hr class="divider">
-  <button onclick="sendPrompt('Please do a deeper statistical analysis and give actionable recommendations based on the CSV data I just uploaded to the analyzer.')" style="font-size:13px;width:100%;">
-    <i class="ti ti-message-2" aria-hidden="true"></i> Ask Claude for deeper analysis ↗
-  </button>
-</div>
-
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-let charts=[];
-const COLORS=['#378ADD','#1D9E75','#BA7517','#D4537E','#7F77DD','#D85A30'];
+let charts = [];
+const COLORS = ['#378ADD','#1D9E75','#BA7517','#D4537E','#7F77DD','#D85A30'];
 
-document.getElementById('drop-zone').addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.classList.add('drag-over');});
-document.getElementById('drop-zone').addEventListener('dragleave',e=>e.currentTarget.classList.remove('drag-over'));
-document.getElementById('drop-zone').addEventListener('drop',e=>{e.preventDefault();e.currentTarget.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)parseFile(f);});
-document.getElementById('csv-inp').addEventListener('change',e=>{if(e.target.files[0])parseFile(e.target.files[0]);});
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) parseFile(f); });
+document.getElementById('csv-inp').addEventListener('change', e => { if (e.target.files[0]) parseFile(e.target.files[0]); });
 
-function parseFile(file){
-  if(!file.name.toLowerCase().endsWith('.csv')){alert('Please upload a .csv file');return;}
-  Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>{
-    render(r.data,r.meta.fields||[],file.name,(file.size/1024).toFixed(1)+' KB');
+function parseFile(file) {
+  if (!file.name.toLowerCase().endsWith('.csv')) { alert('Please upload a .csv file'); return; }
+  Papa.parse(file, { header: true, skipEmptyLines: true, complete: r => {
+    render(r.data, r.meta.fields || [], file.name, (file.size / 1024).toFixed(1) + ' KB');
   }});
 }
 
-function loadSample(){
-  const csv=`Month,Revenue,Expenses,Profit,Region
+function loadSample() {
+  const csv = `Month,Revenue,Expenses,Profit,Region
 Jan,42000,28000,14000,North
 Feb,38000,25000,13000,South
 Mar,51000,31000,20000,North
@@ -111,158 +133,159 @@ Sep,70000,42000,28000,West
 Oct,65000,39000,26000,North
 Nov,72000,43000,29000,East
 Dec,80000,48000,32000,West`;
-  Papa.parse(csv,{header:true,skipEmptyLines:true,complete:r=>{
-    render(r.data,r.meta.fields||[],'sample_sales_data.csv','1.2 KB');
+  Papa.parse(csv, { header: true, skipEmptyLines: true, complete: r => {
+    render(r.data, r.meta.fields || [], 'sample_sales_data.csv', '1.2 KB');
   }});
 }
 
-function render(data,fields,fname,fsize){
-  document.getElementById('upload-sec').style.display='none';
-  document.getElementById('result-sec').style.display='block';
-  document.getElementById('fname').textContent=fname;
+function render(data, fields, fname, fsize) {
+  document.getElementById('upload-sec').style.display = 'none';
+  document.getElementById('result-sec').style.display = 'block';
+  document.getElementById('fname').textContent = fname;
 
-  const numCols=fields.filter(f=>{
-    const v=data.map(r=>r[f]).filter(x=>x!==''&&x!=null);
-    return v.length>0&&v.filter(x=>!isNaN(parseFloat(x))).length/v.length>0.75;
+  const numCols = fields.filter(f => {
+    const v = data.map(r => r[f]).filter(x => x !== '' && x != null);
+    return v.length > 0 && v.filter(x => !isNaN(parseFloat(x))).length / v.length > 0.75;
   });
-  const txtCols=fields.filter(f=>!numCols.includes(f));
+  const txtCols = fields.filter(f => !numCols.includes(f));
 
-  let missing=0;
-  data.forEach(row=>fields.forEach(f=>{if(!row[f]||String(row[f]).trim()==='')missing++;}));
+  let missing = 0;
+  data.forEach(row => fields.forEach(f => { if (!row[f] || String(row[f]).trim() === '') missing++; }));
 
-  document.getElementById('fmeta').textContent=fsize+' · '+data.length+' rows · '+fields.length+' columns';
-  document.getElementById('s-rows').textContent=data.length.toLocaleString();
-  document.getElementById('s-cols').textContent=fields.length;
-  document.getElementById('s-num').textContent=numCols.length;
-  document.getElementById('s-miss').textContent=missing;
+  document.getElementById('fmeta').textContent = fsize + ' · ' + data.length + ' rows · ' + fields.length + ' columns';
+  document.getElementById('s-rows').textContent = data.length.toLocaleString();
+  document.getElementById('s-cols').textContent = fields.length;
+  document.getElementById('s-num').textContent = numCols.length;
+  document.getElementById('s-miss').textContent = missing;
 
-  const tags=document.getElementById('col-tags');
-  tags.innerHTML='';
-  fields.forEach(f=>{
-    const t=document.createElement('span');
-    t.className='ctag '+(numCols.includes(f)?'num':'txt');
-    t.textContent=f+(numCols.includes(f)?'  #':'');
-    tags.appendChild(t);
+  const tagsEl = document.getElementById('col-tags');
+  tagsEl.innerHTML = '';
+  fields.forEach(f => {
+    const t = document.createElement('span');
+    t.className = 'ctag ' + (numCols.includes(f) ? 'num' : 'txt');
+    t.textContent = f + (numCols.includes(f) ? ' #' : '');
+    tagsEl.appendChild(t);
   });
 
-  buildCharts(data,fields,numCols,txtCols);
-  fetchAI(data,fields,numCols,fname,data.length);
+  buildCharts(data, fields, numCols, txtCols);
+  fetchAI(data, fields, numCols, fname, data.length);
 }
 
-function buildCharts(data,fields,numCols,txtCols){
-  const g=document.getElementById('chart-grid');
-  g.innerHTML='';
-  charts.forEach(c=>c.destroy());
-  charts=[];
+function buildCharts(data, fields, numCols, txtCols) {
+  const g = document.getElementById('chart-grid');
+  g.innerHTML = '';
+  charts.forEach(c => c.destroy());
+  charts = [];
+  if (numCols.length === 0) return;
 
-  if(numCols.length===0)return;
+  const labelCol = txtCols[0] || fields[0];
+  const N = Math.min(data.length, 14);
 
-  const labelCol=txtCols[0]||fields[0];
-  const N=Math.min(data.length,14);
-
-  // Chart 1: Bar — first numeric col
-  const nc1=numCols[0];
-  const labels1=data.slice(0,N).map(r=>String(r[labelCol]||'').slice(0,15));
-  const vals1=data.slice(0,N).map(r=>parseFloat(r[nc1])||0);
-  const c1=mkCard('c1',nc1+' by '+labelCol);
+  // Chart 1: Bar
+  const nc1 = numCols[0];
+  const labels1 = data.slice(0, N).map(r => String(r[labelCol] || '').slice(0, 15));
+  const vals1 = data.slice(0, N).map(r => parseFloat(r[nc1]) || 0);
+  const c1 = mkCard('c1', nc1 + ' by ' + labelCol);
   g.appendChild(c1);
-  charts.push(new Chart(document.getElementById('c1'),{
-    type:'bar',
-    data:{labels:labels1,datasets:[{label:nc1,data:vals1,backgroundColor:COLORS[0]+'bb',borderColor:COLORS[0],borderWidth:1,borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:labels1.length>8}},y:{beginAtZero:true,ticks:{font:{size:10}}}}}
+  charts.push(new Chart(document.getElementById('c1'), {
+    type: 'bar',
+    data: { labels: labels1, datasets: [{ label: nc1, data: vals1, backgroundColor: COLORS[0] + 'bb', borderColor: COLORS[0], borderWidth: 1, borderRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 10 }, maxRotation: 45 } }, y: { beginAtZero: true, ticks: { font: { size: 10 } } } } }
   }));
 
-  // Chart 2: Line — multiple numeric cols
-  if(numCols.length>=2){
-    const cols2=numCols.slice(0,3);
-    const labels2=data.slice(0,N).map(r=>String(r[labelCol]||'').slice(0,12));
-    const ds=cols2.map((col,i)=>({label:col,data:data.slice(0,N).map(r=>parseFloat(r[col])||0),borderColor:COLORS[i],backgroundColor:COLORS[i]+'18',fill:false,tension:.35,pointRadius:3,borderDash:i===1?[5,3]:i===2?[2,2]:[]}));
-    const c2=mkCard('c2','Trend comparison');
-    const leg=document.createElement('div');
-    leg.className='clegend';
-    cols2.forEach((col,i)=>{leg.innerHTML+=`<span><b style="background:${COLORS[i]}"></b>${col}</span>`;});
-    c2.insertBefore(leg,c2.querySelector('.chart-wrap'));
+  // Chart 2: Line (multi-column)
+  if (numCols.length >= 2) {
+    const cols2 = numCols.slice(0, 3);
+    const labels2 = data.slice(0, N).map(r => String(r[labelCol] || '').slice(0, 12));
+    const ds = cols2.map((col, i) => ({ label: col, data: data.slice(0, N).map(r => parseFloat(r[col]) || 0), borderColor: COLORS[i], backgroundColor: COLORS[i] + '18', fill: false, tension: .35, pointRadius: 3, borderDash: i === 1 ? [5, 3] : i === 2 ? [2, 2] : [] }));
+    const c2 = mkCard('c2', 'Trend comparison');
+    const leg = document.createElement('div');
+    leg.className = 'clegend';
+    cols2.forEach((col, i) => { leg.innerHTML += `<span><span style="width:9px;height:9px;border-radius:2px;background:${COLORS[i]};display:inline-block;"></span>${col}</span>`; });
+    c2.insertBefore(leg, c2.querySelector('.chart-wrap'));
     g.appendChild(c2);
-    charts.push(new Chart(document.getElementById('c2'),{
-      type:'line',
-      data:{labels:labels2,datasets:ds},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},maxRotation:45}},y:{ticks:{font:{size:10}}}}}
+    charts.push(new Chart(document.getElementById('c2'), {
+      type: 'line',
+      data: { labels: labels2, datasets: ds },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 10 }, maxRotation: 45 } }, y: { ticks: { font: { size: 10 } } } } }
     }));
   }
 
-  // Chart 3: Donut — categorical breakdown
-  const catCol=txtCols.find(c=>{const u=[...new Set(data.map(r=>r[c]))].filter(Boolean);return u.length>=2&&u.length<=8;});
-  if(catCol){
-    const nc=numCols[0];
-    const grp={};
-    data.forEach(r=>{const k=String(r[catCol]||'Other');grp[k]=(grp[k]||0)+(parseFloat(r[nc])||0);});
-    const lbs=Object.keys(grp);
-    const vs=lbs.map(l=>parseFloat(grp[l].toFixed(2)));
-    const tot=vs.reduce((a,b)=>a+b,0);
-    const c3=mkCard('c3',nc+' by '+catCol);
-    const leg=document.createElement('div');
-    leg.className='clegend';
-    lbs.forEach((l,i)=>{const pct=tot>0?((vs[i]/tot)*100).toFixed(1):0;leg.innerHTML+=`<span><b style="background:${COLORS[i%COLORS.length]};border-radius:50%;"></b>${l} ${pct}%</span>`;});
-    c3.insertBefore(leg,c3.querySelector('.chart-wrap'));
+  // Chart 3: Donut
+  const catCol = txtCols.find(c => { const u = [...new Set(data.map(r => r[c]))].filter(Boolean); return u.length >= 2 && u.length <= 8; });
+  if (catCol) {
+    const nc = numCols[0];
+    const grp = {};
+    data.forEach(r => { const k = String(r[catCol] || 'Other'); grp[k] = (grp[k] || 0) + (parseFloat(r[nc]) || 0); });
+    const lbs = Object.keys(grp);
+    const vs = lbs.map(l => parseFloat(grp[l].toFixed(2)));
+    const tot = vs.reduce((a, b) => a + b, 0);
+    const c3 = mkCard('c3', nc + ' by ' + catCol);
+    const leg = document.createElement('div');
+    leg.className = 'clegend';
+    lbs.forEach((l, i) => { const pct = tot > 0 ? ((vs[i] / tot) * 100).toFixed(1) : 0; leg.innerHTML += `<span><span style="width:9px;height:9px;border-radius:50%;background:${COLORS[i % COLORS.length]};display:inline-block;"></span>${l} ${pct}%</span>`; });
+    c3.insertBefore(leg, c3.querySelector('.chart-wrap'));
     g.appendChild(c3);
-    charts.push(new Chart(document.getElementById('c3'),{
-      type:'doughnut',
-      data:{labels:lbs,datasets:[{data:vs,backgroundColor:COLORS.slice(0,lbs.length),borderWidth:2,borderColor:'var(--color-background-primary)'}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}
+    charts.push(new Chart(document.getElementById('c3'), {
+      type: 'doughnut',
+      data: { labels: lbs, datasets: [{ data: vs, backgroundColor: COLORS.slice(0, lbs.length), borderWidth: 2, borderColor: '#fff' }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { display: false } } }
     }));
   }
 }
 
-function mkCard(id,title){
-  const d=document.createElement('div');
-  d.className='chart-card';
-  d.innerHTML=`<p class="chart-title">${title}</p><div class="chart-wrap" style="position:relative;width:100%;height:200px;"><canvas id="${id}" role="img" aria-label="${title} chart"></canvas></div>`;
+function mkCard(id, title) {
+  const d = document.createElement('div');
+  d.className = 'chart-card';
+  d.innerHTML = `<div class="chart-title">${title}</div><div class="chart-wrap" style="position:relative;width:100%;height:200px;"><canvas id="${id}" role="img" aria-label="${title} chart"></canvas></div>`;
   return d;
 }
 
-async function fetchAI(data,fields,numCols,fname,rows){
-  document.getElementById('ai-load').style.display='flex';
-  document.getElementById('ai-box').style.display='none';
-  document.getElementById('ai-err').style.display='none';
+async function fetchAI(data, fields, numCols, fname, rows) {
+  document.getElementById('ai-load').style.display = 'flex';
+  document.getElementById('ai-box').style.display = 'none';
+  document.getElementById('ai-err').style.display = 'none';
 
-  const stats={};
-  numCols.forEach(col=>{
-    const v=data.map(r=>parseFloat(r[col])).filter(x=>!isNaN(x));
-    if(!v.length)return;
-    const sum=v.reduce((a,b)=>a+b,0);
-    stats[col]={min:Math.min(...v).toFixed(2),max:Math.max(...v).toFixed(2),avg:(sum/v.length).toFixed(2),total:sum.toFixed(2)};
+  const stats = {};
+  numCols.forEach(col => {
+    const v = data.map(r => parseFloat(r[col])).filter(x => !isNaN(x));
+    if (!v.length) return;
+    const sum = v.reduce((a, b) => a + b, 0);
+    stats[col] = { min: Math.min(...v).toFixed(2), max: Math.max(...v).toFixed(2), avg: (sum / v.length).toFixed(2), total: sum.toFixed(2) };
   });
 
-  const prompt=`You are a concise data analyst. Analyze this CSV and provide exactly 3-4 specific, number-driven insights.
+  const prompt = `You are a concise data analyst. Analyze this CSV and give 3-4 specific, number-driven insights.
 
 File: ${fname} | Rows: ${rows} | Columns: ${fields.join(', ')}
 Stats: ${JSON.stringify(stats)}
-Sample (5 rows): ${JSON.stringify(data.slice(0,5))}
+Sample: ${JSON.stringify(data.slice(0, 5))}
 
-Reply with ONLY a short paragraph (3-5 sentences). Use specific numbers. No bullet points, no headers, no markdown.`;
+Reply ONLY with a short paragraph (3-5 sentences). Use specific numbers. No bullets, no headers.`;
 
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
     });
-    const d=await res.json();
-    const txt=(d.content||[]).map(b=>b.text||'').join('').trim();
-    document.getElementById('ai-load').style.display='none';
-    document.getElementById('ai-box').style.display='block';
-    document.getElementById('ai-text').textContent=txt||'Analysis complete. Explore the charts above for visual insights.';
-  }catch(e){
-    document.getElementById('ai-load').style.display='none';
-    document.getElementById('ai-err').style.display='block';
-    document.getElementById('ai-err').textContent='AI insights unavailable. Charts are ready above.';
+    const d = await res.json();
+    const txt = (d.content || []).map(b => b.text || '').join('').trim();
+    document.getElementById('ai-load').style.display = 'none';
+    document.getElementById('ai-box').style.display = 'block';
+    document.getElementById('ai-text').textContent = txt || 'Analysis complete. Explore the charts above.';
+  } catch (e) {
+    document.getElementById('ai-load').style.display = 'none';
+    document.getElementById('ai-err').style.display = 'block';
+    document.getElementById('ai-err').textContent = 'Could not load AI insights. Charts are ready above.';
   }
 }
 
-function resetTool(){
-  charts.forEach(c=>c.destroy());charts=[];
-  document.getElementById('result-sec').style.display='none';
-  document.getElementById('upload-sec').style.display='block';
-  document.getElementById('csv-inp').value='';
+function resetTool() {
+  charts.forEach(c => c.destroy()); charts = [];
+  document.getElementById('result-sec').style.display = 'none';
+  document.getElementById('upload-sec').style.display = 'block';
+  document.getElementById('csv-inp').value = '';
 }
 </script>
+</body>
+</html>
