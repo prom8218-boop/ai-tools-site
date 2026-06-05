@@ -3,11 +3,13 @@ import subprocess
 import os
 import base64
 import requests
+import uuid
+import tempfile
+import shutil
 from code_analyzer import CodeAnalyzer
 from session_manager import SessionManager
 from rate_limiter import RateLimiter, SecurityManager, ErrorHandler
 from learning_hub import LearningHub
-from flask import render_template
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -104,7 +106,7 @@ def generate_image():
         error_handler.log_error('api_error', str(e), user_id, '/api/generate-image')
         return jsonify({"error": f"Error: {str(e)}"}), 500
 
-# 💻 3. CODE EXECUTION
+# 💻 3. CODE EXECUTION (Updated & Safer)
 @app.route('/api/execute', methods=['POST'])
 def execute_code():
     data = request.get_json(silent=True) or {}
@@ -124,35 +126,50 @@ def execute_code():
         return jsonify({"error": msg}), 400
     
     output = ""
+    # প্রত্যেক রিকোয়েস্টের জন্য একটি আলাদা এবং ইউনিক ফোল্ডার তৈরি করা হচ্ছে
+    temp_dir = tempfile.mkdtemp(prefix=f"exec_{uuid.uuid4().hex[:8]}_")
+    
     try:
         if lang == 'python':
-            process = subprocess.run(['python3', '-c', code], capture_output=True, text=True, timeout=5)
+            process = subprocess.run(['python3', '-c', code], capture_output=True, text=True, timeout=5, cwd=temp_dir)
             output = process.stdout if process.returncode == 0 else process.stderr
+            
         elif lang == 'c':
-            with open('temp.c', 'w') as f: f.write(code)
-            c_build = subprocess.run(['gcc', 'temp.c', '-o', 'temp_c'], capture_output=True, text=True)
+            file_path = os.path.join(temp_dir, 'temp.c')
+            exe_path = os.path.join(temp_dir, 'temp_c')
+            with open(file_path, 'w') as f: f.write(code)
+            c_build = subprocess.run(['gcc', file_path, '-o', exe_path], capture_output=True, text=True)
             if c_build.returncode == 0:
-                output = subprocess.run(['./temp_c'], capture_output=True, text=True, timeout=5).stdout
+                output = subprocess.run([exe_path], capture_output=True, text=True, timeout=5).stdout
             else: output = c_build.stderr
+            
         elif lang == 'cpp':
-            with open('temp.cpp', 'w') as f: f.write(code)
-            cpp_build = subprocess.run(['g++', 'temp.cpp', '-o', 'temp_cpp'], capture_output=True, text=True)
+            file_path = os.path.join(temp_dir, 'temp.cpp')
+            exe_path = os.path.join(temp_dir, 'temp_cpp')
+            with open(file_path, 'w') as f: f.write(code)
+            cpp_build = subprocess.run(['g++', file_path, '-o', exe_path], capture_output=True, text=True)
             if cpp_build.returncode == 0:
-                output = subprocess.run(['./temp_cpp'], capture_output=True, text=True, timeout=5).stdout
+                output = subprocess.run([exe_path], capture_output=True, text=True, timeout=5).stdout
             else: output = cpp_build.stderr
+            
         elif lang == 'java':
-            with open('Main.java', 'w') as f: f.write(code)
-            java_build = subprocess.run(['javac', 'Main.java'], capture_output=True, text=True)
+            file_path = os.path.join(temp_dir, 'Main.java')
+            with open(file_path, 'w') as f: f.write(code)
+            java_build = subprocess.run(['javac', file_path], capture_output=True, text=True, cwd=temp_dir)
             if java_build.returncode == 0:
-                output = subprocess.run(['java', 'Main'], capture_output=True, text=True, timeout=5).stdout
+                output = subprocess.run(['java', 'Main'], capture_output=True, text=True, timeout=5, cwd=temp_dir).stdout
             else: output = java_build.stderr
+            
     except subprocess.TimeoutExpired:
         output = "Error: Code execution timed out (Max 5s)"
         error_handler.log_error('timeout', 'Code execution timeout', user_id, '/api/execute')
     except Exception as e:
         output = f"Error: {str(e)}"
         error_handler.log_error('execution_error', str(e), user_id, '/api/execute')
-    
+    finally:
+        # কাজ শেষ হওয়ার পর ইউনিক ফোল্ডারটি মুছে ফেলা হচ্ছে
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        
     return jsonify({"output": output})
 
 # 🔍 4. CODE ANALYSIS
@@ -322,5 +339,6 @@ def error_stats():
 @app.route('/data-analyzer')
 def data_analyzer():
     return render_template('data_analyzer.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
