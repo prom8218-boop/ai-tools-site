@@ -7,6 +7,7 @@ from code_analyzer import CodeAnalyzer
 from session_manager import SessionManager
 from rate_limiter import RateLimiter, SecurityManager, ErrorHandler
 from learning_hub import LearningHub
+from flask import render_template
 
 # Initialize Flask app
 app = Flask(__name__)
