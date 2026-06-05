@@ -10,78 +10,88 @@
 </head>
 <body class="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
     <div class="min-h-screen text-white">
-        <!-- Header -->
         <header class="bg-slate-900/80 border-b border-slate-700 backdrop-blur-sm">
             <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
                     <i class="fas fa-rocket"></i> AI Tools Suite
                 </h1>
                 <div id="user-profile" class="hidden flex items-center gap-3">
-                    <img id="user-avatar" src="" alt="User" class="w-8 h-8 rounded-full">
-                    <span id="user-name" class="text-sm"></span>
-                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">Logout</button>
+                    <img id="user-avatar" src="" alt="User" class="w-8 h-8 rounded-full border border-slate-600">
+                    <span id="user-name" class="text-sm font-medium"></span>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded text-sm font-medium transition-colors">Logout</button>
                 </div>
                 <div id="google-btn"></div>
             </div>
         </header>
 
-        <!-- Main Container -->
         <div class="max-w-7xl mx-auto px-4 py-6">
-            <!-- Tab Navigation -->
-            <div class="flex gap-2 mb-6 border-b border-slate-700 overflow-x-auto">
-                <button onclick="switchTab('chat')" class="tab-btn active px-4 py-2 border-b-2 border-cyan-400 text-cyan-400 whitespace-nowrap">
-                    <i class="fas fa-message"></i> AI Chat
+            <div class="flex gap-2 mb-6 border-b border-slate-700 overflow-x-auto custom-scrollbar">
+                <button onclick="switchTab('chat')" class="tab-btn active px-4 py-3 border-b-2 border-cyan-400 text-cyan-400 whitespace-nowrap font-medium transition-all">
+                    <i class="fas fa-message mr-1"></i> AI Chat
                 </button>
-                <button onclick="switchTab('code')" class="tab-btn px-4 py-2 text-slate-400 hover:text-white whitespace-nowrap">
-                    <i class="fas fa-code"></i> Code Executor
+                <button onclick="switchTab('data')" class="tab-btn px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap font-medium transition-all">
+                    <i class="fas fa-chart-pie mr-1"></i> Data Analyzer
                 </button>
-                <button onclick="switchTab('analyzer')" class="tab-btn px-4 py-2 text-slate-400 hover:text-white whitespace-nowrap">
-                    <i class="fas fa-magnifying-glass"></i> Code Analyzer
+                <button onclick="switchTab('code')" class="tab-btn px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap font-medium transition-all">
+                    <i class="fas fa-code mr-1"></i> Code Executor
+                </button>
+                <button onclick="switchTab('analyzer')" class="tab-btn px-4 py-3 text-slate-400 hover:text-white whitespace-nowrap font-medium transition-all">
+                    <i class="fas fa-magnifying-glass mr-1"></i> Code Analyzer
                 </button>
             </div>
 
-            <!-- Chat Tab -->
             <div id="chat-tab" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div class="lg:col-span-2">
-                    <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                        <h2 class="text-lg font-semibold mb-4 text-cyan-400">💬 AI Assistant</h2>
-                        <div id="ai-chat-box" class="bg-slate-950 h-96 overflow-y-auto mb-4 p-4 rounded border border-slate-700 text-sm">
-                            <div class="text-slate-400"><i class="fas fa-circle-check"></i> Welcome! Use /image to generate images.</div>
+                    <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 shadow-lg">
+                        <h2 class="text-lg font-semibold mb-4 text-cyan-400"><i class="fas fa-robot"></i> AI Assistant</h2>
+                        <div id="ai-chat-box" class="bg-slate-950 h-[400px] overflow-y-auto mb-4 p-4 rounded-lg border border-slate-700 text-sm scroll-smooth">
+                            <div class="text-slate-400 flex items-center gap-2"><i class="fas fa-circle-check text-green-500"></i> Welcome! Use /image to generate images.</div>
                         </div>
-                        <div class="flex gap-2">
-                            <input id="ai-input" type="text" placeholder="Ask AI anything... (or /image prompt)" 
-                                   class="flex-1 bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500" 
+                        <div class="flex gap-2 relative">
+                            <input id="ai-input" type="text" placeholder="Ask AI anything... (or start with /image)" 
+                                   class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all" 
                                    onkeypress="if(event.key==='Enter') askAI()">
-                            <button onclick="askAI()" class="bg-cyan-600 hover:bg-cyan-700 px-6 py-2 rounded font-semibold">
-                                <i class="fas fa-send"></i> Send
+                            <button onclick="askAI()" class="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 px-6 py-3 rounded-lg font-semibold shadow-lg transition-all">
+                                <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                    <h3 class="text-lg font-semibold mb-4 text-blue-400">📝 Tips</h3>
-                    <div class="space-y-3 text-sm text-slate-400">
-                        <div class="p-2 bg-slate-800 rounded">
-                            <strong class="text-white">Regular Chat:</strong> Ask any question
+                <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 shadow-lg h-fit">
+                    <h3 class="text-lg font-semibold mb-4 text-blue-400"><i class="fas fa-lightbulb"></i> Tips & Commands</h3>
+                    <div class="space-y-3 text-sm text-slate-300">
+                        <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors">
+                            <strong class="text-cyan-400 block mb-1">Regular Chat</strong> 
+                            Ask coding questions, math, or general queries.
                         </div>
-                        <div class="p-2 bg-slate-800 rounded">
-                            <strong class="text-white">Image:</strong> Type /image [description]
+                        <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors">
+                            <strong class="text-purple-400 block mb-1">Generate Image</strong> 
+                            Type <code class="bg-slate-900 px-1 py-0.5 rounded text-amber-300">/image</code> followed by your prompt.
                         </div>
-                        <div class="p-2 bg-slate-800 rounded">
-                            <strong class="text-white">Example:</strong> /image cyberpunk city
+                        <div class="p-3 bg-slate-800/80 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors">
+                            <strong class="text-green-400 block mb-1">Example</strong> 
+                            <span class="text-slate-400">/image futuristic cyberpunk city at night, 4k</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Code Executor Tab -->
+            <div id="data-tab" class="tab-content hidden">
+                <div class="bg-slate-900/50 border border-slate-700 rounded-xl w-full h-[80vh] min-h-[600px] overflow-hidden shadow-lg relative">
+                    <div class="absolute inset-0 flex items-center justify-center -z-10 text-slate-500">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Loading Data Analyzer...
+                    </div>
+                    <iframe src="/data-analyzer" class="w-full h-full border-0 bg-transparent z-10 relative"></iframe>
+                </div>
+            </div>
+
             <div id="code-tab" class="tab-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div class="lg:col-span-2">
-                        <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                        <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 shadow-lg">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-semibold text-green-400">💻 Code Executor</h2>
-                                <select id="code-language" class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white">
+                                <h2 class="text-lg font-semibold text-green-400"><i class="fas fa-terminal"></i> Code Executor</h2>
+                                <select id="code-language" class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-white outline-none focus:border-green-500 transition-colors">
                                     <option value="python">Python</option>
                                     <option value="cpp">C++</option>
                                     <option value="c">C</option>
@@ -89,64 +99,61 @@
                                 </select>
                             </div>
                             <textarea id="code-editor" placeholder="Write your code here..." 
-                                      class="w-full h-64 bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-green-500 font-mono text-sm mb-4"></textarea>
-                            <button onclick="runCode()" class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold">
+                                      class="w-full h-[400px] bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-green-500 font-mono text-sm mb-4 resize-y transition-colors"></textarea>
+                            <button onclick="runCode()" class="w-full bg-green-600 hover:bg-green-500 px-4 py-3 rounded-lg font-bold shadow-lg transition-colors flex items-center justify-center gap-2">
                                 <i class="fas fa-play"></i> Run Code
                             </button>
                         </div>
                     </div>
-                    <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold mb-4 text-green-400">📤 Output</h3>
-                        <div id="output" class="bg-slate-950 border border-slate-600 rounded p-3 h-80 overflow-y-auto text-sm font-mono text-slate-300">
-                            Output will appear here...
+                    <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 shadow-lg h-fit">
+                        <h3 class="text-lg font-semibold mb-4 text-green-400"><i class="fas fa-desktop"></i> Output Console</h3>
+                        <div id="output" class="bg-black border border-slate-700 rounded-lg p-4 h-[440px] overflow-y-auto text-sm font-mono text-green-500 shadow-inner">
+                            > Output will appear here...
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Code Analyzer Tab (NEW) -->
             <div id="analyzer-tab" class="tab-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    <!-- Code Editor -->
                     <div class="lg:col-span-3">
-                        <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+                        <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 shadow-lg">
                             <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-semibold text-purple-400">🔍 Code Analyzer</h2>
-                                <select id="analyzer-language" class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-sm">
+                                <h2 class="text-lg font-semibold text-purple-400"><i class="fas fa-microscope"></i> Code Analyzer</h2>
+                                <select id="analyzer-language" class="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-white text-sm outline-none focus:border-purple-500 transition-colors">
                                     <option value="python">Python</option>
                                     <option value="javascript">JavaScript</option>
                                     <option value="java">Java</option>
                                     <option value="cpp">C++</option>
                                 </select>
                             </div>
-                            <textarea id="analyzer-code" placeholder="Paste your code here for analysis..." 
-                                      class="w-full h-64 bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 font-mono text-sm mb-4"></textarea>
+                            <textarea id="analyzer-code" placeholder="Paste your code here for deep analysis..." 
+                                      class="w-full h-[400px] bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono text-sm mb-4 resize-y transition-colors"></textarea>
                             
-                            <!-- Analysis Buttons -->
-                            <div class="grid grid-cols-2 gap-2">
-                                <button onclick="analyzeCode()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded font-semibold text-sm">
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <button onclick="analyzeCode()" class="bg-purple-600 hover:bg-purple-500 px-4 py-2.5 rounded-lg font-medium text-sm shadow transition-colors flex items-center justify-center gap-2">
                                     <i class="fas fa-magnifying-glass"></i> Full Analysis
                                 </button>
-                                <button onclick="detectBugs()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-semibold text-sm">
-                                    <i class="fas fa-bug"></i> Bug Detection
+                                <button onclick="detectBugs()" class="bg-red-600 hover:bg-red-500 px-4 py-2.5 rounded-lg font-medium text-sm shadow transition-colors flex items-center justify-center gap-2">
+                                    <i class="fas fa-bug"></i> Detect Bugs
                                 </button>
-                                <button onclick="analyzePerformance()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-semibold text-sm">
-                                    <i class="fas fa-chart-line"></i> Performance
+                                <button onclick="analyzePerformance()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2.5 rounded-lg font-medium text-sm shadow transition-colors flex items-center justify-center gap-2">
+                                    <i class="fas fa-bolt"></i> Performance
                                 </button>
-                                <button onclick="getRefactoringTips()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-semibold text-sm">
-                                    <i class="fas fa-lightbulb"></i> Refactoring
+                                <button onclick="getRefactoringTips()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-lg font-medium text-sm shadow transition-colors flex items-center justify-center gap-2">
+                                    <i class="fas fa-wand-magic-sparkles"></i> Refactor
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Analysis Results Panel -->
                     <div class="lg:col-span-1">
-                        <div class="bg-slate-900/50 border border-slate-700 rounded-lg p-4 sticky top-4 max-h-screen overflow-y-auto">
-                            <h3 class="text-lg font-semibold mb-4 text-purple-400">📊 Results</h3>
-                            <div id="analysis-panel" class="text-sm text-slate-400 space-y-2">
-                                <div class="p-3 bg-slate-800 rounded text-center text-slate-500">
-                                    <i class="fas fa-arrow-up"></i> Click a button to analyze
+                        <div class="bg-slate-900/50 border border-slate-700 rounded-xl p-4 shadow-lg sticky top-4 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                            <h3 class="text-lg font-semibold mb-4 text-purple-400"><i class="fas fa-chart-simple"></i> Results</h3>
+                            <div id="analysis-panel" class="text-sm text-slate-300 space-y-3">
+                                <div class="p-6 bg-slate-800/50 border border-slate-700 border-dashed rounded-lg text-center text-slate-500">
+                                    <i class="fas fa-arrow-left text-2xl mb-2 block"></i>
+                                    Paste code & click a button to start analysis
                                 </div>
                             </div>
                         </div>
@@ -156,31 +163,36 @@
         </div>
     </div>
 
+    <style>
+        /* Custom Scrollbar for better UI */
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #64748b; }
+    </style>
+
     <script>
-        // Tab switching
+        // Tab switching logic
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-cyan-400', 'text-cyan-400');
+                btn.classList.remove('active', 'border-b-2', 'border-cyan-400', 'text-cyan-400');
                 btn.classList.add('text-slate-400');
             });
             
             document.getElementById(tabName + '-tab').classList.remove('hidden');
-            event.target.closest('.tab-btn').classList.add('active', 'border-cyan-400', 'text-cyan-400');
+            event.target.closest('.tab-btn').classList.add('active', 'border-b-2', 'border-cyan-400', 'text-cyan-400');
             event.target.closest('.tab-btn').classList.remove('text-slate-400');
         }
 
+        // Code Analyzer Functions
         function analyzeCode() {
             const code = document.getElementById('analyzer-code').value;
             const language = document.getElementById('analyzer-language').value;
-            
-            if (!code.trim()) {
-                showAnalysisError('Please enter code to analyze');
-                return;
-            }
+            if (!code.trim()) return showAnalysisError('Please enter code to analyze');
 
             const analysisPanel = document.getElementById('analysis-panel');
-            analysisPanel.innerHTML = '<div class="text-center py-4"><div class="text-blue-400 animate-pulse">🔍 Analyzing...</div></div>';
+            analysisPanel.innerHTML = '<div class="text-center py-8"><i class="fas fa-circle-notch fa-spin text-3xl text-purple-500 mb-2"></i><div class="text-purple-400 animate-pulse">Running full analysis...</div></div>';
 
             fetch('./api/analyze-code', {
                 method: 'POST',
@@ -188,24 +200,17 @@
                 body: JSON.stringify({ code, language })
             })
             .then(r => r.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    displayAnalysisResults(data.analysis);
-                } else {
-                    showAnalysisError(data.error);
-                }
-            })
-            .catch(() => showAnalysisError('Connection error'));
+            .then(data => data.status === 'success' ? displayAnalysisResults(data.analysis) : showAnalysisError(data.error))
+            .catch(() => showAnalysisError('Connection error. Is backend running?'));
         }
 
         function detectBugs() {
             const code = document.getElementById('analyzer-code').value;
             const language = document.getElementById('analyzer-language').value;
-            
-            if (!code.trim()) {
-                showAnalysisError('Please enter code');
-                return;
-            }
+            if (!code.trim()) return showAnalysisError('Please enter code');
+
+            const panel = document.getElementById('analysis-panel');
+            panel.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-red-500"></i></div>';
 
             fetch('./api/detect-bugs', {
                 method: 'POST',
@@ -215,17 +220,18 @@
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    const panel = document.getElementById('analysis-panel');
-                    panel.innerHTML = `<div class="text-lg font-semibold text-red-400 mb-2">🐛 Found ${data.bugs.total_bugs}</div>`;
+                    panel.innerHTML = `<div class="text-lg font-bold text-red-400 mb-3 border-b border-slate-700 pb-2"><i class="fas fa-bug"></i> Found ${data.bugs.total_bugs} Bugs</div>`;
+                    if(data.bugs.total_bugs === 0) panel.innerHTML += '<div class="text-green-400 text-center py-4"><i class="fas fa-check-circle"></i> No bugs found!</div>';
                     
                     data.bugs.issues.forEach(bug => {
-                        const color = bug.severity === 'CRITICAL' ? 'red-500' : bug.severity === 'HIGH' ? 'red-400' : bug.severity === 'MEDIUM' ? 'yellow-400' : 'blue-400';
-                        panel.innerHTML += `<div class="bg-slate-900 p-2 rounded mb-2 border-l-4 border-red-500">
-                            <div class="text-${color} font-bold text-xs">${bug.severity}</div>
-                            <div class="text-slate-400 text-xs mt-1">${bug.type}</div>
-                        </div>`;
+                        const color = bug.severity === 'CRITICAL' ? 'red-500' : bug.severity === 'HIGH' ? 'red-400' : bug.severity === 'MEDIUM' ? 'amber-400' : 'blue-400';
+                        panel.innerHTML += `
+                            <div class="bg-slate-900 p-3 rounded-lg mb-3 border-l-4 border-${color} shadow">
+                                <div class="text-${color} font-bold text-xs mb-1">${bug.severity}</div>
+                                <div class="text-slate-300 text-sm leading-relaxed">${bug.type}</div>
+                            </div>`;
                     });
-                }
+                } else showAnalysisError(data.error);
             })
             .catch(() => showAnalysisError('Bug detection failed'));
         }
@@ -233,11 +239,10 @@
         function analyzePerformance() {
             const code = document.getElementById('analyzer-code').value;
             const language = document.getElementById('analyzer-language').value;
-            
-            if (!code.trim()) {
-                showAnalysisError('Please enter code');
-                return;
-            }
+            if (!code.trim()) return showAnalysisError('Please enter code');
+
+            const panel = document.getElementById('analysis-panel');
+            panel.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-500"></i></div>';
 
             fetch('./api/performance-analysis', {
                 method: 'POST',
@@ -248,27 +253,25 @@
             .then(data => {
                 if (data.status === 'success') {
                     const m = data.metrics;
-                    const panel = document.getElementById('analysis-panel');
                     panel.innerHTML = `
-                        <div class="font-semibold text-blue-400 mb-3">📊 Metrics</div>
-                        <div class="bg-slate-900 p-2 rounded mb-2">
-                            <div class="text-slate-400 text-xs">Complexity</div>
-                            <div class="text-lg font-bold text-cyan-400">${m.cyclomatic_complexity}</div>
+                        <div class="font-bold text-blue-400 mb-4 border-b border-slate-700 pb-2"><i class="fas fa-bolt"></i> Metrics</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 shadow">
+                                <div class="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Complexity</div>
+                                <div class="text-xl font-bold text-cyan-400">${m.cyclomatic_complexity}</div>
+                            </div>
+                            <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 shadow">
+                                <div class="text-slate-400 text-[10px] uppercase tracking-wider mb-1">Max Depth</div>
+                                <div class="text-xl font-bold text-cyan-400">${m.nested_depth}</div>
+                            </div>
                         </div>
-                        <div class="bg-slate-900 p-2 rounded mb-2">
-                            <div class="text-slate-400 text-xs">Max Depth</div>
-                            <div class="text-lg font-bold text-cyan-400">${m.nested_depth}</div>
-                        </div>
-                        <div class="bg-slate-900 p-2 rounded mb-2">
-                            <div class="text-slate-400 text-xs">Perf Score</div>
-                            <div class="text-lg font-bold text-green-400">${m.performance_score}/100</div>
-                        </div>
-                        <div class="bg-slate-900 p-2 rounded">
-                            <div class="text-slate-400 text-xs">Rating</div>
-                            <div class="text-sm font-bold">${m.performance_rating}</div>
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-800 shadow mt-3 text-center">
+                            <div class="text-slate-400 text-xs uppercase tracking-wider mb-2">Performance Score</div>
+                            <div class="text-3xl font-black ${m.performance_score > 80 ? 'text-green-500' : 'text-amber-500'}">${m.performance_score}/100</div>
+                            <div class="text-sm font-semibold mt-2 text-slate-300 bg-slate-800 rounded py-1">${m.performance_rating}</div>
                         </div>
                     `;
-                }
+                } else showAnalysisError(data.error);
             })
             .catch(() => showAnalysisError('Performance analysis failed'));
         }
@@ -276,11 +279,10 @@
         function getRefactoringTips() {
             const code = document.getElementById('analyzer-code').value;
             const language = document.getElementById('analyzer-language').value;
-            
-            if (!code.trim()) {
-                showAnalysisError('Please enter code');
-                return;
-            }
+            if (!code.trim()) return showAnalysisError('Please enter code');
+
+            const panel = document.getElementById('analysis-panel');
+            panel.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-emerald-500"></i></div>';
 
             fetch('./api/refactoring-suggestions', {
                 method: 'POST',
@@ -290,52 +292,65 @@
             .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    const panel = document.getElementById('analysis-panel');
-                    panel.innerHTML = `<div class="font-semibold text-green-400 mb-2">💡 Tips (${data.suggestions.length})</div>`;
-                    
+                    panel.innerHTML = `<div class="font-bold text-emerald-400 mb-3 border-b border-slate-700 pb-2"><i class="fas fa-lightbulb"></i> Tips (${data.suggestions.length})</div>`;
+                    if(data.suggestions.length === 0) panel.innerHTML += '<div class="text-slate-400 text-center py-4">Code looks good! No major refactoring needed.</div>';
+
                     data.suggestions.forEach(sug => {
+                        const borderColor = sug.priority === 'HIGH' ? 'border-red-500' : sug.priority === 'MEDIUM' ? 'border-amber-500' : 'border-emerald-500';
                         panel.innerHTML += `
-                            <div class="bg-slate-900 p-2 rounded mb-2 border-l-4 border-green-500">
-                                <div class="font-semibold text-xs text-${sug.priority === 'HIGH' ? 'red-400' : 'yellow-400'}">${sug.type}</div>
-                                <div class="text-slate-400 text-xs mt-1">${sug.suggestion}</div>
+                            <div class="bg-slate-900 p-3 rounded-lg mb-3 border-l-4 ${borderColor} shadow">
+                                <div class="font-bold text-xs text-slate-300 mb-1">${sug.type}</div>
+                                <div class="text-slate-400 text-sm leading-relaxed">${sug.suggestion}</div>
                             </div>
                         `;
                     });
-                }
+                } else showAnalysisError(data.error);
             })
             .catch(() => showAnalysisError('Refactoring tips failed'));
         }
 
         function displayAnalysisResults(analysis) {
             const panel = document.getElementById('analysis-panel');
-            const scoreColor = analysis.overall_score >= 80 ? 'text-green-400' : 
-                               analysis.overall_score >= 60 ? 'text-yellow-400' : 'text-red-400';
+            const scoreColor = analysis.overall_score >= 80 ? 'text-green-500' : analysis.overall_score >= 60 ? 'text-amber-500' : 'text-red-500';
             
             let html = `
-                <div class="bg-slate-800 border border-slate-700 rounded-lg p-3 mb-3 text-center">
-                    <div class="text-3xl font-bold ${scoreColor}">${analysis.overall_score}</div>
-                    <div class="text-xs text-slate-400">Quality Score</div>
+                <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 mb-4 text-center shadow-lg relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10 bg-gradient-to-t ${scoreColor.replace('text', 'from')} to-transparent"></div>
+                    <div class="text-5xl font-black ${scoreColor} drop-shadow-md mb-1">${analysis.overall_score}</div>
+                    <div class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Quality Score</div>
                 </div>
             `;
 
-            html += `<div class="bg-slate-900 p-2 rounded mb-2"><div class="text-red-400 text-sm font-bold">🐛 Bugs: ${analysis.bugs.total_bugs}</div></div>`;
-            html += `<div class="bg-slate-900 p-2 rounded mb-2"><div class="text-blue-400 text-sm font-bold">📊 Score: ${analysis.performance.performance_score}</div></div>`;
-            html += `<div class="bg-slate-900 p-2 rounded"><div class="text-green-400 text-sm font-bold">💡 Tips: ${analysis.refactoring_suggestions.length}</div></div>`;
-
+            html += `
+                <div class="space-y-2">
+                    <div class="bg-slate-900 p-3 rounded-lg flex justify-between items-center border border-slate-800">
+                        <span class="text-red-400 font-medium"><i class="fas fa-bug w-5"></i> Bugs Found</span>
+                        <span class="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-xs font-bold">${analysis.bugs.total_bugs}</span>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg flex justify-between items-center border border-slate-800">
+                        <span class="text-blue-400 font-medium"><i class="fas fa-bolt w-5"></i> Perf Score</span>
+                        <span class="bg-blue-500/20 text-blue-400 py-0.5 px-2 rounded-full text-xs font-bold">${analysis.performance.performance_score}</span>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg flex justify-between items-center border border-slate-800">
+                        <span class="text-emerald-400 font-medium"><i class="fas fa-lightbulb w-5"></i> Suggestions</span>
+                        <span class="bg-emerald-500/20 text-emerald-400 py-0.5 px-2 rounded-full text-xs font-bold">${analysis.refactoring_suggestions.length}</span>
+                    </div>
+                </div>
+            `;
             panel.innerHTML = html;
         }
 
         function showAnalysisError(message) {
-            const panel = document.getElementById('analysis-panel');
-            panel.innerHTML = `<div class="text-red-400 p-2 bg-slate-900 rounded text-xs">❌ ${message}</div>`;
+            document.getElementById('analysis-panel').innerHTML = `<div class="text-red-400 p-3 bg-red-950/30 border border-red-900/50 rounded-lg text-sm"><i class="fas fa-circle-exclamation mr-1"></i> ${message}</div>`;
         }
 
+        // Code Executor Function
         function runCode() {
             const lang = document.getElementById('code-language').value;
             const code = document.getElementById('code-editor').value;
             const outputConsole = document.getElementById('output');
 
-            outputConsole.innerText = "Executing...";
+            outputConsole.innerHTML = '<span class="text-slate-400 animate-pulse">> Executing code...</span>';
 
             fetch('./api/execute', {
                 method: 'POST',
@@ -344,24 +359,33 @@
             })
             .then(r => r.json())
             .then(data => {
-                outputConsole.innerText = data.output || data.error || 'No output';
+                if(data.error) {
+                    outputConsole.innerHTML = `<span class="text-red-500">> Error:\n${data.error}</span>`;
+                } else {
+                    outputConsole.innerHTML = `> \n${data.output || 'Code executed successfully with no output.'}`;
+                }
             })
             .catch(() => {
-                outputConsole.innerText = "Error connecting to server";
+                outputConsole.innerHTML = "<span class="text-red-500">> Error: Could not connect to the execution server.</span>";
             });
         }
 
+        // AI Chat Function (Upgraded with loading indicator)
         async function askAI() {
-            const input = document.getElementById('ai-input').value;
+            const inputField = document.getElementById('ai-input');
+            const input = inputField.value;
             const chatBox = document.getElementById('ai-chat-box');
-            if (!input) return;
+            if (!input.trim()) return;
 
-            chatBox.innerHTML += `<div class="text-cyan-400 font-bold mt-3">You: ${input}</div>`;
-            document.getElementById('ai-input').value = '';
+            // User Message
+            chatBox.innerHTML += `<div class="text-cyan-400 font-medium mt-4 flex items-start gap-2"><i class="fas fa-user mt-1 text-xs opacity-70"></i> <div>You: ${input}</div></div>`;
+            inputField.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
 
             if (input.toLowerCase().startsWith('/image ')) {
                 const imagePrompt = input.substring(7);
-                chatBox.innerHTML += `<div class="text-amber-400 italic mt-2">🎨 Generating image...</div>`;
+                const loadingId = 'img-' + Date.now();
+                chatBox.innerHTML += `<div id="${loadingId}" class="text-amber-400 italic mt-2 text-sm animate-pulse flex items-center gap-2"><i class="fas fa-palette"></i> Generating masterpiece...</div>`;
                 chatBox.scrollTop = chatBox.scrollHeight;
                 
                 try {
@@ -371,15 +395,23 @@
                         body: JSON.stringify({ prompt: imagePrompt })
                     });
                     const data = await response.json();
+                    document.getElementById(loadingId).remove();
+
                     if (data.image_data) {
-                        chatBox.innerHTML += `<div class="mt-3"><img src="${data.image_data}" class="rounded-xl max-w-sm"/></div>`;
+                        chatBox.innerHTML += `<div class="mt-3"><img src="${data.image_data}" class="rounded-xl max-w-sm border border-slate-700 shadow-lg"/></div>`;
                     } else {
-                        chatBox.innerHTML += `<div class="text-red-400 mt-1">Error: ${data.error}</div>`;
+                        chatBox.innerHTML += `<div class="text-red-400 mt-1 text-sm"><i class="fas fa-exclamation-triangle"></i> Error: ${data.error}</div>`;
                     }
                 } catch (err) {
-                    chatBox.innerHTML += `<div class="text-red-400 mt-1">Network error</div>`;
+                    if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+                    chatBox.innerHTML += `<div class="text-red-400 mt-1 text-sm"><i class="fas fa-wifi"></i> Network error generating image</div>`;
                 }
             } else {
+                // Loading Indicator for Text
+                const loadingId = 'msg-' + Date.now();
+                chatBox.innerHTML += `<div id="${loadingId}" class="text-slate-400 italic mt-3 text-sm flex items-center gap-2"><i class="fas fa-robot animate-bounce"></i> AI is thinking...</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+
                 try {
                     const response = await fetch('./api/ai', {
                         method: 'POST',
@@ -387,14 +419,23 @@
                         body: JSON.stringify({ prompt: input })
                     });
                     const data = await response.json();
-                    chatBox.innerHTML += `<div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800/60 max-w-[85%] mt-2 text-slate-200">AI: ${data.result}</div>`;
+                    
+                    document.getElementById(loadingId).remove();
+                    
+                    // Format response with some basic markdown styling if needed (using pre-wrap)
+                    chatBox.innerHTML += `
+                        <div class="bg-slate-800/80 p-3.5 rounded-2xl rounded-tl-sm border border-slate-700 max-w-[90%] mt-2 text-slate-200 shadow-sm whitespace-pre-wrap">
+                            ${data.result || data.error}
+                        </div>`;
                 } catch (err) {
-                    chatBox.innerHTML += `<div class="text-red-400 mt-1">Error processing request</div>`;
+                    if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+                    chatBox.innerHTML += `<div class="text-red-400 mt-1 text-sm"><i class="fas fa-wifi"></i> Error connecting to AI server</div>`;
                 }
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
 
+        // Authentication Functions
         function handleCredentialResponse(response) {
             const base64Url = response.credential.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -410,7 +451,7 @@
         function logout() {
             document.getElementById('google-btn').classList.remove('hidden');
             document.getElementById('user-profile').classList.add('hidden');
-            location.reload();
+            location.reload(); // Simple way to clear state
         }
 
         window.onload = function () {
@@ -420,7 +461,7 @@
             });
             google.accounts.id.renderButton(
                 document.getElementById("google-btn"),
-                { theme: "dark", size: "medium", type: "standard", shape: "pill" }
+                { theme: "filled_blue", size: "large", text: "continue_with", shape: "pill" }
             );
         };
     </script>
