@@ -319,8 +319,8 @@ def error_stats():
     stats = error_handler.get_error_stats(hours)
     return jsonify({"status": "success", "stats": stats})
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
 @app.route('/data-analyzer')
 def data_analyzer():
     return render_template('data_analyzer.html')
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
