@@ -1,3 +1,17 @@
+// 🛡️ Security Helper: Prevent XSS Attacks
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>'"]/g, function(match) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[match];
+    });
+}
+
 // 🔒 1. GOOGLE IDENTITY AUTHENTICATION FLOW
 function handleCredentialResponse(response) {
     // Google JWT Token extract block
@@ -17,7 +31,7 @@ function handleCredentialResponse(response) {
     document.getElementById('user-avatar').src = user.picture;
 
     const chatBox = document.getElementById('ai-chat-box');
-    chatBox.innerHTML += `<div class="text-emerald-400 font-semibold mt-2"><i class="fa-solid fa-circle-check"></i> Welcome ${user.name}! Secure Google context linked successfully.</div>`;
+    chatBox.innerHTML += `<div class="text-emerald-400 font-semibold mt-2"><i class="fa-solid fa-circle-check"></i> Welcome ${escapeHTML(user.name)}! Secure Google context linked successfully.</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
@@ -45,7 +59,8 @@ async function askAI() {
     const chatBox = document.getElementById('ai-chat-box');
     if(!input) return;
 
-    chatBox.innerHTML += `<div class="text-cyan-400 font-bold mt-3">You: ${input}</div>`;
+    // 🛡️ Input is sanitized here
+    chatBox.innerHTML += `<div class="text-cyan-400 font-bold mt-3">You: ${escapeHTML(input)}</div>`;
     document.getElementById('ai-input').value = '';
 
     // Check configuration layer endpoint route maps
@@ -64,11 +79,11 @@ async function askAI() {
             if (data.image_data) {
                 chatBox.innerHTML += `
                     <div class="mt-3 p-2 bg-slate-900 border border-slate-800 rounded-2xl max-w-sm shadow-xl">
-                        <img src="${data.image_data}" alt="AI Generated Graphic" class="rounded-xl w-full h-auto"/>
+                        <img src="${escapeHTML(data.image_data)}" alt="AI Generated Graphic" class="rounded-xl w-full h-auto"/>
                         <p class="text-xs text-slate-500 mt-2 text-center font-mono">Engine: Imagen 3.0</p>
                     </div>`;
             } else {
-                chatBox.innerHTML += `<div class="text-red-400 mt-1">SaaS Fail: ${data.error}</div>`;
+                chatBox.innerHTML += `<div class="text-red-400 mt-1">SaaS Fail: ${escapeHTML(data.error)}</div>`;
             }
         } catch (err) {
             chatBox.innerHTML += `<div class="text-red-400 mt-1">Network runtime error.</div>`;
@@ -81,7 +96,8 @@ async function askAI() {
                 body: JSON.stringify({ prompt: input })
             });
             const data = await response.json();
-            chatBox.innerHTML += `<div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800/60 max-w-[85%] mt-2 text-slate-200">AI: ${data.result}</div>`;
+            // 🛡️ Output is sanitized here
+            chatBox.innerHTML += `<div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800/60 max-w-[85%] mt-2 text-slate-200">AI: ${escapeHTML(data.result)}</div>`;
         } catch (err) {
             chatBox.innerHTML += `<div class="text-red-400 mt-1">Processing error. Check backend link.</div>`;
         }
@@ -104,13 +120,14 @@ async function runCode() {
             body: JSON.stringify({ language: lang, code: code })
         });
         const data = await response.json();
+        // InnerText is naturally safe from XSS
         outputConsole.innerText = data.output || data.error;
     } catch (err) {
         outputConsole.innerText = "Error establishing link layer to compilation node.";
     }
 }
 
-// 🔍 4. CODE ANALYSIS & OPTIMIZATION ENGINE (NEW FEATURE)
+// 🔍 4. CODE ANALYSIS & OPTIMIZATION ENGINE
 
 // 4.1 - Full Comprehensive Analysis
 async function analyzeCode() {
@@ -172,16 +189,16 @@ function displayAnalysisResults(analysis) {
         html += `<div class="text-yellow-400">⚠️ Found ${analysis.bugs.total_bugs} potential issues</div>`;
         analysis.bugs.issues.forEach(bug => {
             const severityColor = bug.severity === 'CRITICAL' ? 'text-red-500' :
-                                 bug.severity === 'HIGH' ? 'text-red-400' :
-                                 bug.severity === 'MEDIUM' ? 'text-yellow-400' : 'text-blue-400';
+                                  bug.severity === 'HIGH' ? 'text-red-400' :
+                                  bug.severity === 'MEDIUM' ? 'text-yellow-400' : 'text-blue-400';
             html += `
                 <div class="mt-2 p-2 bg-slate-900 rounded border-l-4 border-red-500">
                     <div class="flex justify-between">
-                        <span class="${severityColor} font-semibold">${bug.severity}</span>
-                        <span class="text-slate-400">${bug.type}</span>
+                        <span class="${severityColor} font-semibold">${escapeHTML(bug.severity)}</span>
+                        <span class="text-slate-400">${escapeHTML(bug.type)}</span>
                     </div>
-                    <div class="text-slate-400 text-xs mt-1">${bug.message}</div>
-                    <div class="text-green-400 text-xs mt-1">✓ Fix: ${bug.fix}</div>
+                    <div class="text-slate-400 text-xs mt-1">${escapeHTML(bug.message)}</div>
+                    <div class="text-green-400 text-xs mt-1">✓ Fix: ${escapeHTML(bug.fix)}</div>
                 </div>
             `;
         });
@@ -206,7 +223,7 @@ function displayAnalysisResults(analysis) {
             </div>
             <div class="bg-slate-900 p-2 rounded">
                 <div class="text-slate-400">Perf Rating</div>
-                <div class="text-lg font-bold">${analysis.performance.performance_rating}</div>
+                <div class="text-lg font-bold">${escapeHTML(analysis.performance.performance_rating)}</div>
             </div>
         </div>
     </div>`;
@@ -220,16 +237,16 @@ function displayAnalysisResults(analysis) {
     } else {
         analysis.refactoring_suggestions.forEach(sug => {
             const priorityColor = sug.priority === 'HIGH' ? 'text-red-400' :
-                                 sug.priority === 'MEDIUM' ? 'text-yellow-400' : 'text-blue-400';
+                                  sug.priority === 'MEDIUM' ? 'text-yellow-400' : 'text-blue-400';
             html += `
                 <div class="mt-2 p-2 bg-slate-900 rounded border-l-4 border-green-500">
                     <div class="flex justify-between">
-                        <span class="${priorityColor} font-semibold">${sug.priority}</span>
-                        <span class="text-slate-400">${sug.type}</span>
+                        <span class="${priorityColor} font-semibold">${escapeHTML(sug.priority)}</span>
+                        <span class="text-slate-400">${escapeHTML(sug.type)}</span>
                     </div>
-                    <div class="text-slate-400 text-xs mt-1">${sug.message}</div>
-                    <div class="text-green-400 text-xs mt-1">💡 ${sug.suggestion}</div>
-                    <div class="text-blue-400 text-xs mt-1">↑ Benefit: ${sug.benefit}</div>
+                    <div class="text-slate-400 text-xs mt-1">${escapeHTML(sug.message)}</div>
+                    <div class="text-green-400 text-xs mt-1">💡 ${escapeHTML(sug.suggestion)}</div>
+                    <div class="text-blue-400 text-xs mt-1">↑ Benefit: ${escapeHTML(sug.benefit)}</div>
                 </div>
             `;
         });
@@ -263,8 +280,8 @@ async function detectBugs() {
             
             data.bugs.issues.forEach(bug => {
                 panel.innerHTML += `<div class="bg-slate-900 p-2 rounded mb-2 border-l-4 border-red-500">
-                    <div class="text-${bug.severity === 'CRITICAL' ? 'red-500' : 'red-400'} font-bold">${bug.severity}: ${bug.type}</div>
-                    <div class="text-slate-400 text-sm">${bug.message}</div>
+                    <div class="text-${bug.severity === 'CRITICAL' ? 'red-500' : 'red-400'} font-bold">${escapeHTML(bug.severity)}: ${escapeHTML(bug.type)}</div>
+                    <div class="text-slate-400 text-sm">${escapeHTML(bug.message)}</div>
                 </div>`;
             });
         }
@@ -311,7 +328,7 @@ async function analyzePerformance() {
                     </div>
                     <div class="bg-slate-900 p-3 rounded text-center">
                         <div class="text-slate-400 text-sm">Rating</div>
-                        <div class="text-xl font-bold">${metrics.performance_rating}</div>
+                        <div class="text-xl font-bold">${escapeHTML(metrics.performance_rating)}</div>
                     </div>
                 </div>
                 <div class="mt-3 text-slate-400 text-sm">Lines of Code: ${metrics.lines_of_code}</div>
@@ -347,9 +364,9 @@ async function getRefactoringTips() {
             data.suggestions.forEach(sug => {
                 panel.innerHTML += `
                     <div class="bg-slate-900 p-2 rounded mb-2 border-l-4 border-green-500">
-                        <div class="font-semibold text-${sug.priority === 'HIGH' ? 'red-400' : 'yellow-400'}">${sug.type}</div>
-                        <div class="text-slate-400 text-sm mt-1">${sug.suggestion}</div>
-                        <div class="text-blue-400 text-xs mt-1">Benefit: ${sug.benefit}</div>
+                        <div class="font-semibold text-${sug.priority === 'HIGH' ? 'red-400' : 'yellow-400'}">${escapeHTML(sug.type)}</div>
+                        <div class="text-slate-400 text-sm mt-1">${escapeHTML(sug.suggestion)}</div>
+                        <div class="text-blue-400 text-xs mt-1">Benefit: ${escapeHTML(sug.benefit)}</div>
                     </div>
                 `;
             });
@@ -362,5 +379,43 @@ async function getRefactoringTips() {
 // Helper function to show analysis errors
 function showAnalysisError(message) {
     const panel = document.getElementById('analysis-panel');
-    panel.innerHTML = `<div class="text-red-400 p-3 bg-slate-900 rounded">❌ ${message}</div>`;
+    panel.innerHTML = `<div class="text-red-400 p-3 bg-slate-900 rounded">❌ ${escapeHTML(message)}</div>`;
+}
+
+// 📈 5. ALGO TRADING SCRIPT GENERATOR (EXTRA FEATURE)
+async function generateTradingScript() {
+    const inputField = document.getElementById('ai-input');
+    const strategyIdea = inputField.value;
+    const chatBox = document.getElementById('ai-chat-box');
+    
+    if (!strategyIdea) {
+        chatBox.innerHTML += `<div class="text-red-400 mt-2 text-sm">⚠️ Please enter a strategy idea first (e.g., "XAUUSD Moving Average Crossover").</div>`;
+        return;
+    }
+
+    // AI-কে ট্রেডিং কোড লেখার জন্য স্পেশাল নির্দেশ (Prompt Engineering)
+    const specializedPrompt = `Act as an expert algorithmic trading developer. Write a clean, well-commented automated trading script for the following strategy: "${strategyIdea}". Please provide the code in Pine Script (for TradingView) or MQL5 (for MetaTrader 5) as appropriate. Include logic for optimal lot sizing and risk management if applicable.`;
+
+    chatBox.innerHTML += `<div class="text-emerald-400 font-bold mt-3"><i class="fa-solid fa-chart-line"></i> Generating Algo Script for: ${escapeHTML(strategyIdea)}...</div>`;
+    inputField.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        const response = await fetch('./api/ai', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ prompt: specializedPrompt })
+        });
+        const data = await response.json();
+        
+        // আউটপুট দেখানোর ডিজাইন
+        chatBox.innerHTML += `
+            <div class="bg-slate-900/90 p-4 rounded-2xl border border-emerald-600/50 max-w-[90%] mt-2 text-slate-200 shadow-lg shadow-emerald-900/20">
+                <div class="text-emerald-400 text-xs mb-2 font-mono border-b border-emerald-800/50 pb-1">⚙️ Algo Engine Result</div>
+                <pre class="whitespace-pre-wrap font-mono text-sm overflow-x-auto">${escapeHTML(data.result)}</pre>
+            </div>`;
+    } catch (err) {
+        chatBox.innerHTML += `<div class="text-red-400 mt-1">Failed to generate trading script. Check connection.</div>`;
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
 }
