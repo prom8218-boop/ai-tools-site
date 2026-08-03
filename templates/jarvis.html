@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S. — AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --jarvis-cyan: #22d3ee;
+            --jarvis-blue: #3b82f6;
+            --jarvis-glow: #67e8f9;
+            --jarvis-red: #ef4444;
+            --jarvis-amber: #f59e0b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 50% 30%, rgba(34,211,238,0.08), transparent 55%),
+                radial-gradient(circle at 80% 80%, rgba(59,130,246,0.08), transparent 50%),
+                #04060d;
+            color: #cdeefb;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* --- Background grid --- */
+        .grid-bg {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(34,211,238,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34,211,238,0.05) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(circle at 50% 40%, black 30%, transparent 80%);
+        }
+        .scanline {
+            position: fixed; inset: 0; z-index: 1; pointer-events: none;
+            background: linear-gradient(transparent 50%, rgba(34,211,238,0.025) 50%);
+            background-size: 100% 4px;
+            animation: scan 8s linear infinite;
+        }
+        @keyframes scan { from { background-position: 0 0; } to { background-position: 0 100%; } }
+
+        /* --- Arc Reactor --- */
+        .reactor-stage {
+            position: relative;
+            width: 360px; height: 360px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ring {
+            position: absolute; border-radius: 50%;
+            border: 2px solid rgba(34,211,238,0.25);
+            box-shadow: 0 0 20px rgba(34,211,238,0.15), inset 0 0 20px rgba(34,211,238,0.1);
+        }
+        .ring.r1 { width: 100%; height: 100%; border-style: dashed; animation: spin 24s linear infinite; }
+        .ring.r2 { width: 82%; height: 82%; border-color: rgba(103,232,249,0.35); animation: spin 14s linear infinite reverse; }
+        .ring.r3 { width: 64%; height: 64%; border-style: dotted; border-color: rgba(59,130,246,0.4); animation: spin 9s linear infinite; }
+        .ring.r4 { width: 46%; height: 46%; border-color: rgba(34,211,238,0.55); animation: spin 6s linear infinite reverse; }
+
+        .tick-ring {
+            position: absolute; width: 100%; height: 100%;
+            animation: spin 40s linear infinite;
+        }
+        .tick-ring text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            fill: rgba(34,211,238,0.5);
+            letter-spacing: 2px;
+        }
+
+        .core {
+            position: relative;
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 50%,
+                #ffffff 0%, var(--jarvis-glow) 18%, var(--jarvis-cyan) 42%,
+                rgba(34,211,238,0.4) 70%, transparent 100%);
+            box-shadow:
+                0 0 40px rgba(34,211,238,0.8),
+                0 0 90px rgba(34,211,238,0.5),
+                0 0 160px rgba(59,130,246,0.4),
+                inset 0 0 30px rgba(255,255,255,0.6);
+            animation: pulse 3s ease-in-out infinite;
+            transition: transform 0.3s;
+        }
+        .core::before {
+            content: ''; position: absolute; inset: 18%;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.6);
+            background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(34,211,238,0.2));
+        }
+        .core::after {
+            content: ''; position: absolute; inset: 35%;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff, var(--jarvis-glow));
+            box-shadow: 0 0 30px #fff;
+        }
+        @keyframes pulse {
+            0%,100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.05); filter: brightness(1.25); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* State classes */
+        .listening .core { animation: pulseFast 0.8s ease-in-out infinite; box-shadow:
+            0 0 60px rgba(34,211,238,1), 0 0 130px rgba(34,211,238,0.7), 0 0 220px rgba(59,130,246,0.5); }
+        @keyframes pulseFast { 0%,100% { transform: scale(1.05); } 50% { transform: scale(1.18); } }
+
+        .thinking .core { animation: spin 1.2s linear infinite; }
+        .thinking .core::before { animation: spin 0.6s linear infinite reverse; }
+
+        .speaking .core { animation: pulseSpeak 0.5s ease-in-out infinite; }
+        @keyframes pulseSpeak { 0%,100% { transform: scale(1.02); } 50% { transform: scale(1.1); } }
+
+        .error-state .core { background: radial-gradient(circle, #fff, var(--jarvis-red), rgba(239,68,68,0.3)); box-shadow: 0 0 60px rgba(239,68,68,0.7); }
+
+        /* --- Waveform / visualizer --- */
+        #waveform { width: 100%; height: 70px; display: block; }
+
+        /* --- HUD panels --- */
+        .hud-panel {
+            background: linear-gradient(160deg, rgba(13,24,40,0.85), rgba(7,14,26,0.85));
+            border: 1px solid rgba(34,211,238,0.25);
+            border-radius: 14px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 30px rgba(34,211,238,0.06), inset 0 0 30px rgba(34,211,238,0.03);
+            position: relative;
+        }
+        .hud-panel::before {
+            content: ''; position: absolute; top: -1px; left: 20px; right: 20px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--jarvis-cyan), transparent);
+        }
+        .corner { position: absolute; width: 14px; height: 14px; border-color: var(--jarvis-cyan); }
+        .corner.tl { top: 6px; left: 6px; border-top: 2px solid; border-left: 2px solid; }
+        .corner.tr { top: 6px; right: 6px; border-top: 2px solid; border-right: 2px solid; }
+        .corner.bl { bottom: 6px; left: 6px; border-bottom: 2px solid; border-left: 2px solid; }
+        .corner.br { bottom: 6px; right: 6px; border-bottom: 2px solid; border-right: 2px solid; }
+
+        .glow-text { text-shadow: 0 0 10px rgba(34,211,238,0.6); }
+
+        /* --- Status dot --- */
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot.idle { background: var(--jarvis-cyan); box-shadow: 0 0 10px var(--jarvis-cyan); }
+        .status-dot.listen { background: var(--jarvis-amber); box-shadow: 0 0 12px var(--jarvis-amber); animation: blink 0.7s infinite; }
+        .status-dot.think { background: var(--jarvis-blue); box-shadow: 0 0 12px var(--jarvis-blue); animation: blink 0.4s infinite; }
+        .status-dot.speak { background: #34d399; box-shadow: 0 0 12px #34d399; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        /* --- Conversation log --- */
+        #conv-log { scrollbar-width: thin; scrollbar-color: rgba(34,211,238,0.4) transparent; }
+        #conv-log::-webkit-scrollbar { width: 6px; }
+        #conv-log::-webkit-scrollbar-thumb { background: rgba(34,211,238,0.4); border-radius: 10px; }
+        .msg-user { align-self: flex-end; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); }
+        .msg-jarvis { align-self: flex-start; background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.35); }
+
+        /* --- Command chips --- */
+        .chip {
+            background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.3);
+            color: #a5e8f5; border-radius: 999px; padding: 6px 14px; font-size: 12px;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .chip:hover { background: rgba(34,211,238,0.2); border-color: var(--jarvis-cyan); transform: translateY(-1px); }
+
+        /* --- Mic button --- */
+        .mic-btn {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(145deg, rgba(34,211,238,0.2), rgba(59,130,246,0.1));
+            border: 2px solid var(--jarvis-cyan);
+            color: var(--jarvis-cyan); font-size: 24px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 20px rgba(34,211,238,0.3);
+        }
+        .mic-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(34,211,238,0.6); }
+        .mic-btn.active { background: rgba(239,68,68,0.25); border-color: var(--jarvis-red); color: var(--jarvis-red); animation: micPulse 1s infinite; }
+        @keyframes micPulse { 0%,100% { box-shadow: 0 0 20px rgba(239,68,68,0.6); } 50% { box-shadow: 0 0 40px rgba(239,68,68,0.9); } }
+
+        .input-line {
+            background: rgba(7,14,26,0.8); border: 1px solid rgba(34,211,238,0.3);
+            color: #fff; font-family: 'Share Tech Mono', monospace;
+            border-radius: 10px; padding: 14px 18px; width: 100%;
+            transition: all 0.2s;
+        }
+        .input-line:focus { outline: none; border-color: var(--jarvis-cyan); box-shadow: 0 0 15px rgba(34,211,238,0.3); }
+
+        .meter { height: 6px; background: rgba(34,211,238,0.1); border-radius: 4px; overflow: hidden; }
+        .meter > div { height: 100%; background: linear-gradient(90deg, var(--jarvis-cyan), var(--jarvis-blue)); transition: width 0.4s; }
+
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="scanline"></div>
+
+    <!-- TOP HUD BAR -->
+    <header class="relative z-10 border-b border-cyan-500/20 bg-black/30 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+                <div class="orbitron text-xl font-black glow-text" style="color: var(--jarvis-cyan);">J.A.R.V.I.S.</div>
+                <span class="text-[10px] text-cyan-300/60 tracking-widest hidden sm:inline">JUST A RATHER VERY INTELLIGENT SYSTEM</span>
+            </div>
+            <div class="flex items-center gap-5 text-xs">
+                <div class="flex items-center gap-2"><span id="state-dot" class="status-dot idle"></span><span id="state-label" class="orbitron tracking-wider">ONLINE</span></div>
+                <div id="hud-time" class="orbitron text-cyan-300 glow-text">--:--:--</div>
+                <div id="hud-date" class="text-cyan-400/60 hidden md:block">----</div>
+                <a href="/" class="text-cyan-400/60 hover:text-cyan-300 transition-colors border border-cyan-500/30 rounded-lg px-3 py-1"><i class="fas fa-rocket"></i> Suite</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+            <!-- LEFT: REACTOR -->
+            <section class="lg:col-span-2 flex flex-col items-center">
+                <div class="hud-panel w-full p-6 flex flex-col items-center">
+                    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+
+                    <div id="reactor-stage" class="reactor-stage mb-4">
+                        <!-- Rotating tick labels -->
+                        <svg class="tick-ring" viewBox="0 0 360 360">
+                            <defs>
+                                <path id="circlePath" d="M 180,180 m -168,0 a 168,168 0 1,1 336,0 a 168,168 0 1,1 -336,0"/>
+                            </defs>
+                            <text><textPath href="#circlePath" startOffset="0">J.A.R.V.I.S. • SYSTEM ONLINE • ARC REACTOR • MARK XLII • STARK INDUSTRIES • </textPath></text>
+                        </svg>
+                        <div class="ring r1"></div>
+                        <div class="ring r2"></div>
+                        <div class="ring r3"></div>
+                        <div class="ring r4"></div>
+                        <div id="core" class="core"></div>
+                    </div>
+
+                    <div id="status-text" class="orbitron text-center text-sm tracking-widest mb-2 glow-text" style="color: var(--jarvis-cyan);">SYSTEMS OPERATIONAL</div>
+                    <canvas id="waveform" width="320" height="70"></canvas>
+
+                    <!-- System meters -->
+                    <div class="w-full mt-4 space-y-2 text-[11px]">
+                        <div class="flex items-center gap-2"><span class="w-20 text-cyan-400/70">POWER</span><div class="meter flex-1"><div id="m-power" style="width:98%"></div></div><span class="text-cyan-300/80">98%</span></div>
+                        <div class="flex items-center gap-2"><span class="w-20 text-cyan-400/70">CPU LOAD</span><div class="meter flex-1"><div id="m-cpu" style="width:12%"></div></div><span class="text-cyan-300/80" id="m-cpu-v">12%</span></div>
+                        <div class="flex items-center gap-2"><span class="w-20 text-cyan-400/70">MEMORY</span><div class="meter flex-1"><div id="m-mem" style="width:64%"></div></div><span class="text-cyan-300/80">64%</span></div>
+                        <div class="flex items-center gap-2"><span class="w-20 text-cyan-400/70">UPTIME</span><span class="text-cyan-300/80 ml-auto" id="m-uptime">00:00:00</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT: CONSOLE -->
+            <section class="lg:col-span-3 flex flex-col gap-5">
+                <!-- Conversation -->
+                <div class="hud-panel p-5 flex-1 flex flex-col" style="min-height: 380px;">
+                    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="orbitron text-sm tracking-widest" style="color: var(--jarvis-cyan);"><i class="fas fa-satellite-dish mr-2"></i>COMM LOG</h2>
+                        <button onclick="clearLog()" class="text-[11px] text-cyan-400/60 hover:text-cyan-300 border border-cyan-500/20 rounded px-2 py-1">CLEAR</button>
+                    </div>
+                    <div id="conv-log" class="flex-1 overflow-y-auto flex flex-col gap-2 pr-1" style="max-height: 320px;">
+                        <div class="msg-jarvis px-3 py-2 rounded-lg text-sm fade-in">
+                            <span class="text-cyan-400 orbitron text-[10px] mr-2">JARVIS</span>
+                            Good day, sir. JARVIS online and ready. Tap the mic or type a command to begin.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick commands -->
+                <div class="hud-panel p-4">
+                    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+                    <div class="text-[11px] orbitron tracking-widest text-cyan-400/70 mb-2">QUICK COMMANDS</div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="chip" onclick="quick('what time is it')">🕒 Time</span>
+                        <span class="chip" onclick="quick('what is today s date')">📅 Date</span>
+                        <span class="chip" onclick="quick('weather in Dhaka')">🌦️ Weather</span>
+                        <span class="chip" onclick="quick('tell me a joke')">😂 Joke</span>
+                        <span class="chip" onclick="quick('flip a coin')">🪙 Coin</span>
+                        <span class="chip" onclick="quick('price of bitcoin')">₿ Bitcoin</span>
+                        <span class="chip" onclick="quick('who is Albert Einstein')">📚 Wiki</span>
+                        <span class="chip" onclick="quick('open youtube')">🌐 Open YouTube</span>
+                        <span class="chip" onclick="quick('calculate 256 times 18')">🧮 Math</span>
+                        <span class="chip" onclick="quick('tell me a fun fact')">💡 Fact</span>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="hud-panel p-4">
+                    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+                    <div class="flex items-center gap-3">
+                        <button id="mic-btn" class="mic-btn" onclick="toggleMic()" title="Push to talk"><i class="fas fa-microphone" id="mic-icon"></i></button>
+                        <input id="cmd-input" type="text" class="input-line" placeholder="Type a command, or hold the mic to speak..."
+                               onkeydown="if(event.key==='Enter') sendText()">
+                        <button onclick="sendText()" class="orbitron px-5 py-3 rounded-lg font-bold text-sm tracking-wider"
+                                style="background: linear-gradient(145deg, var(--jarvis-cyan), var(--jarvis-blue)); color: #04060d; box-shadow: 0 0 20px rgba(34,211,238,0.4);">
+                            SEND <i class="fas fa-paper-plane ml-1"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between mt-3 text-[11px] text-cyan-400/50">
+                        <div><i class="fas fa-info-circle mr-1"></i> Voice uses your browser's speech engine. Click mic & allow microphone access.</div>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="voice-toggle" checked class="accent-cyan-400"> Voice replies
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+    // ===================== STATE =====================
+    const STAGE = document.getElementById('reactor-stage');
+    const CORE = document.getElementById('core');
+    const STATE_DOT = document.getElementById('state-dot');
+    const STATE_LABEL = document.getElementById('state-label');
+    const STATUS_TEXT = document.getElementById('status-text');
+    const CONV_LOG = document.getElementById('conv-log');
+    const MIC_BTN = document.getElementById('mic-btn');
+    const MIC_ICON = document.getElementById('mic-icon');
+    const CMD_INPUT = document.getElementById('cmd-input');
+    const VOICE_TOGGLE = document.getElementById('voice-toggle');
+
+    let currentState = 'idle'; // idle | listening | thinking | speaking | error
+    const startTime = Date.now();
+
+    function setState(state) {
+        currentState = state;
+        STAGE.classList.remove('listening','thinking','speaking','error-state');
+        STATE_DOT.className = 'status-dot';
+        let label = 'ONLINE', status = 'SYSTEMS OPERATIONAL', cls = 'idle';
+        if (state === 'listening') { STAGE.classList.add('listening'); label='LISTENING'; status='I\'M LISTENING, SIR'; cls='listen'; }
+        else if (state === 'thinking') { STAGE.classList.add('thinking'); label='PROCESSING'; status='ANALYZING REQUEST'; cls='think'; }
+        else if (state === 'speaking') { STAGE.classList.add('speaking'); label='SPEAKING'; status='RESPONDING'; cls='speak'; }
+        else if (state === 'error') { STAGE.classList.add('error-state'); label='ERROR'; status='SYSTEM FAULT'; cls='idle'; }
+        STATE_DOT.classList.add(cls);
+        STATE_LABEL.textContent = label;
+        STATUS_TEXT.textContent = status;
+    }
+
+    // ===================== HUD CLOCK & METERS =====================
+    function tickClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2,'0');
+        const m = String(now.getMinutes()).padStart(2,'0');
+        const s = String(now.getSeconds()).padStart(2,'0');
+        document.getElementById('hud-time').textContent = `${h}:${m}:${s}`;
+        document.getElementById('hud-date').textContent = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+        // uptime
+        const up = Math.floor((Date.now()-startTime)/1000);
+        const uh=String(Math.floor(up/3600)).padStart(2,'0');
+        const um=String(Math.floor((up%3600)/60)).padStart(2,'0');
+        const us=String(up%60).padStart(2,'0');
+        document.getElementById('m-uptime').textContent = `${uh}:${um}:${us}`;
+        // fake cpu jitter
+        const cpu = 8 + Math.floor(Math.random()*22);
+        document.getElementById('m-cpu').style.width = cpu+'%';
+        document.getElementById('m-cpu-v').textContent = cpu+'%';
+    }
+    setInterval(tickClock, 1000); tickClock();
+
+    // ===================== WAVEFORM VISUALIZER =====================
+    const wf = document.getElementById('waveform');
+    const wctx = wf.getContext('2d');
+    let micAnalyser = null, micStream = null, micRAF = null, micCtx = null;
+
+    function drawIdleWave() {
+        const t = Date.now()/400;
+        wctx.clearRect(0,0,wf.width,wf.height);
+        wctx.strokeStyle = 'rgba(34,211,238,0.4)';
+        wctx.lineWidth = 2;
+        wctx.beginPath();
+        for (let x=0; x<wf.width; x+=2) {
+            const y = wf.height/2 + Math.sin(x/30 + t) * 6 * (0.5+0.5*Math.sin(t/3));
+            x===0 ? wctx.moveTo(x,y) : wctx.lineTo(x,y);
+        }
+        wctx.stroke();
+    }
+    let idleRAF = null;
+    function idleAnim() { drawIdleWave(); idleRAF = requestAnimationFrame(idleAnim); }
+    idleAnim();
+
+    async function startMicVisual() {
+        try {
+            micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+            micCtx = new (window.AudioContext||window.webkitAudioContext)();
+            const src = micCtx.createMediaStreamSource(micStream);
+            micAnalyser = micCtx.createAnalyser();
+            micAnalyser.fftSize = 128;
+            src.connect(micAnalyser);
+            const data = new Uint8Array(micAnalyser.frequencyBinCount);
+            const draw = () => {
+                if (!micAnalyser) return;
+                micAnalyser.getByteFrequencyData(data);
+                wctx.clearRect(0,0,wf.width,wf.height);
+                const bw = wf.width / data.length;
+                for (let i=0;i<data.length;i++){
+                    const h = (data[i]/255)*wf.height;
+                    const grad = wctx.createLinearGradient(0,wf.height-h,0,wf.height);
+                    grad.addColorStop(0,'#67e8f9'); grad.addColorStop(1,'#3b82f6');
+                    wctx.fillStyle = grad;
+                    wctx.fillRect(i*bw, wf.height-h, bw-1, h);
+                }
+                micRAF = requestAnimationFrame(draw);
+            };
+            draw();
+        } catch(e) { /* visual fallback stays idle */ }
+    }
+    function stopMicVisual() {
+        if (idleRAF) cancelAnimationFrame(idleRAF);
+        if (micRAF) cancelAnimationFrame(micRAF);
+        if (micStream) { micStream.getTracks().forEach(t=>t.stop()); micStream=null; }
+        if (micCtx) { micCtx.close(); micCtx=null; }
+        micAnalyser=null;
+        idleAnim();
+    }
+
+    // ===================== SPEECH RECOGNITION =====================
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recog = null, recognizing = false;
+    if (SR) {
+        recog = new SR();
+        recog.continuous = false;
+        recog.interimResults = true;
+        recog.lang = 'en-US';
+        recog.onstart = () => { recognizing=true; setState('listening'); MIC_BTN.classList.add('active'); MIC_ICON.className='fas fa-stop'; startMicVisual(); };
+        recog.onerror = (e) => { recognizing=false; MIC_BTN.classList.remove('active'); MIC_ICON.className='fas fa-microphone'; stopMicVisual(); setState('error'); setTimeout(()=>setState('idle'),1500); if(e.error==='not-allowed') addLog('Microphone access denied, sir. Please allow it in your browser.','jarvis'); };
+        recog.onend = () => { recognizing=false; MIC_BTN.classList.remove('active'); MIC_ICON.className='fas fa-microphone'; stopMicVisual(); if(currentState==='listening') setState('idle'); };
+        recog.onresult = (e) => {
+            let transcript='';
+            for (let i=e.resultIndex;i<e.results.length;i++) transcript += e.results[i][0].transcript;
+            CMD_INPUT.value = transcript;
+            if (e.results[e.results.length-1].isFinal) { const t=transcript; CMD_INPUT.value=''; sendToJarvis(t); }
+        };
+    }
+
+    function toggleMic() {
+        if (!SR) { addLog('Sorry sir, your browser does not support voice input. Try Chrome or Edge.','jarvis'); return; }
+        if (recognizing) { recog.stop(); }
+        else { try { CMD_INPUT.value=''; recog.start(); } catch(e){} }
+    }
+
+    // ===================== TEXT-TO-SPEECH =====================
+    const synth = window.speechSynthesis;
+    let voices = [];
+    function loadVoices(){ voices = synth ? synth.getVoices() : []; }
+    if (synth) { synth.onvoiceschanged = loadVoices; loadVoices(); }
+    function pickVoice() {
+        if (!voices.length) return null;
+        // Prefer a male English voice for a butler feel
+        const preferred = voices.filter(v => /en(-GB|_GB|-US|_US)/i.test(v.lang) && /male|daniel|david|guy|david|george|arthur|james/i.test(v.name));
+        if (preferred.length) return preferred[0];
+        const gb = voices.find(v => /en-GB|en_GB/i.test(v.lang)); if (gb) return gb;
+        const en = voices.find(v => /en/i.test(v.lang)); return en || voices[0];
+    }
+    function speak(text) {
+        if (!synth || !VOICE_TOGGLE.checked) return;
+        try { synth.cancel(); } catch(e){}
+        const u = new SpeechSynthesisUtterance(text);
+        const v = pickVoice(); if (v) u.voice = v;
+        u.rate = 1.02; u.pitch = 0.9; u.volume = 1;
+        u.onstart = () => setState('speaking');
+        u.onend = () => setState('idle');
+        u.onerror = () => setState('idle');
+        synth.speak(u);
+    }
+    function stopSpeak(){ if(synth){ try{synth.cancel();}catch(e){} } }
+
+    // ===================== CONVERSATION LOG =====================
+    function addLog(text, who) {
+        const div = document.createElement('div');
+        div.className = (who==='user' ? 'msg-user' : 'msg-jarvis') + ' px-3 py-2 rounded-lg text-sm fade-in max-w-[88%]';
+        const tag = who==='user' ? 'YOU' : 'JARVIS';
+        const tagColor = who==='user' ? 'text-blue-400' : 'text-cyan-400';
+        div.innerHTML = `<span class="${tagColor} orbitron text-[10px] mr-2">${tag}</span>${escapeHtml(text)}`;
+        CONV_LOG.appendChild(div);
+        CONV_LOG.scrollTop = CONV_LOG.scrollHeight;
+    }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function clearLog(){ CONV_LOG.innerHTML=''; }
+
+    // ===================== SEND / RECEIVE =====================
+    function quick(text){ CMD_INPUT.value=''; sendToJarvis(text); }
+    function sendText(){ const t = CMD_INPUT.value.trim(); if(!t) return; CMD_INPUT.value=''; sendToJarvis(t); }
+
+    async function sendToJarvis(text) {
+        if (!text || !text.trim()) return;
+        addLog(text, 'user');
+        setState('thinking');
+        stopSpeak();
+        try {
+            const res = await fetch('./api/jarvis', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ command: text })
+            });
+            const data = await res.json();
+            const reply = data.text || data.reply || 'No response, sir.';
+            addLog(reply, 'jarvis');
+            // client actions
+            if (data.action === 'open_url' && data.data && data.data.url) {
+                window.open(data.data.url, '_blank');
+            }
+            // speak after a tiny delay so log renders
+            setTimeout(()=>speak(reply), 60);
+            if (data.action === 'goodbye') setTimeout(()=>setState('idle'), 4000);
+        } catch (err) {
+            setState('error');
+            addLog('I could not reach the JARVIS server, sir. Is the backend running?', 'jarvis');
+            setTimeout(()=>setState('idle'), 1800);
+        }
+    }
+
+    // Enter on input also works; keyboard shortcut: Space toggles mic when input not focused
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && document.activeElement !== CMD_INPUT) {
+            e.preventDefault(); toggleMic();
+        }
+    });
+
+    // Boot greeting (text only — no autoplay voice to respect browser policies)
+    window.addEventListener('load', () => {
+        addLog('JARVIS is online. All systems nominal. How may I assist you today, sir?', 'jarvis');
+    });
+    </script>
+</body>
+</html>
