@@ -10,6 +10,7 @@ from code_analyzer import CodeAnalyzer
 from session_manager import SessionManager
 from rate_limiter import RateLimiter, SecurityManager, ErrorHandler
 from learning_hub import LearningHub
+from jarvis import get_brain
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-12345")
@@ -22,6 +23,7 @@ rate_limiter = RateLimiter()
 security_mgr = SecurityManager()
 error_handler = ErrorHandler()
 learning_hub = LearningHub()
+jarvis = get_brain()
 
 def add_cors(response):
     response.headers['Access-Control-Allow-Origin'] = '*'
@@ -36,6 +38,24 @@ def after_request(response):
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/jarvis')
+def jarvis_ui():
+    return render_template('jarvis.html')
+
+@app.route('/api/jarvis', methods=['POST', 'OPTIONS'])
+def jarvis_command():
+    if request.method == 'OPTIONS':
+        return '', 200
+    data = request.get_json(silent=True) or {}
+    command = data.get('command', '')
+    if not command or not command.strip():
+        return jsonify({"text": "I didn't catch that, sir. Please say or type a command."})
+    try:
+        result = jarvis.process(command)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"text": f"I encountered an error processing that, sir: {str(e)}"})
 
 @app.route('/api/ai', methods=['POST', 'OPTIONS'])
 def ai_assistant():
